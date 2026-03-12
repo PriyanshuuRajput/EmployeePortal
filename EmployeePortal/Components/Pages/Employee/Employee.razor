@@ -1,0 +1,140 @@
+﻿@page "/"
+@inject IEmployeeService EmployeeService
+@rendermode InteractiveServer
+
+
+<h3>Employee List</h3>
+
+<button type="button" class="btn btn-success" @onclick="ShowModal">
+    Create
+</button>
+<p>Modal State: @show</p>
+@if (employees == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Emp Code</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var emp in employees)
+            {
+                <tr>
+                    <td>@emp.EmpCode</td>
+                    <td>@emp.FirstName @emp.LastName</td>
+                    <td>@emp.Email</td>
+                    <td>@emp.PhoneNumber</td>
+                    <td>@emp.Salary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="mt-3">
+        <button class="btn btn-primary me-2" @onclick="PreviousPage" disabled="@(!HasPrevious)">
+            Previous
+        </button>
+
+        <button class="btn btn-primary" @onclick="NextPage" disabled="@(!HasNext)">
+            Next
+        </button>
+    </div>
+}
+@if (show)
+{
+    <div class="modal fade show " style="display:block">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(selectedEmployee.Id == 0 ? "Create Employee" : "Edit Employee")
+                    </h5>
+
+                    <button class="btn-close" @onclick="CloseModal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <CreateEditEmployee Employee="selectedEmployee"
+                                        OnSaved="HandleSaved" />
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show"></div>
+}
+@code {
+    private bool show;
+    private List<EmployeeDto> employees = new();
+    private EmployeeDto selectedEmployee = new();
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private int totalCount;
+
+    private bool HasPrevious => pageNumber > 1;
+
+    private bool HasNext => pageNumber * pageSize < totalCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployees();
+    }
+
+    private async Task LoadEmployees()
+    {
+        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize);
+
+        employees = result.Items;
+        totalCount = result.TotalCount;
+    }
+
+
+    private async Task EditEmployee(int id)
+    {
+        var emp = await EmployeeService.GetEmployeeByIdAsync(id);
+
+        if (emp != null)
+            selectedEmployee = emp;
+        show = true;
+    }
+    private async Task HandleSaved()
+    {
+        show = false;
+
+        await LoadEmployees();
+    }
+    private void ShowModal()
+    {
+        Console.WriteLine("Create button clicked");
+        selectedEmployee = new EmployeeDto();
+        show = true;
+    }
+    private void CloseModal()
+    {
+        show = false;
+    }
+
+    private async Task NextPage()
+    {
+        pageNumber++;
+        await LoadEmployees();
+    }
+
+    private async Task PreviousPage()
+    {
+        pageNumber--;
+        await LoadEmployees();
+    }
+}

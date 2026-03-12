@@ -1,5 +1,9 @@
+using Application.Interfaces.IRepo;
+using Application.Interfaces.IService;
 using EmployeePortal.Components;
+using EmployeePortal.Services;
 using Infrastructure.DatabaseContext;
+using Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +15,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();
+
 
 var app = builder.Build();
 

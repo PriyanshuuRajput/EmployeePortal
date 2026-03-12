@@ -1,0 +1,73 @@
+﻿@using Application.Dto
+@inject IEmployeeService EmployeeService
+
+<h3>@(Employee.Id == 0 ? "Create Employee" : "Edit Employee")</h3>
+
+<EditForm Model="Employee" OnValidSubmit="SaveEmployee">
+
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Employee Code</label>
+        <InputNumber class="form-control" @bind-Value="Employee.EmpCode" />
+    </div>
+
+    <div class="mb-3">
+        <label>First Name</label>
+        <InputText class="form-control" @bind-Value="Employee.FirstName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Last Name</label>
+        <InputText class="form-control" @bind-Value="Employee.LastName" />
+    </div>
+
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="Employee.Email" />
+    </div>
+
+    <div class="mb-3">
+        <label>Phone</label>
+        <InputText class="form-control" @bind-Value="Employee.PhoneNumber" />
+    </div>
+
+    <div class="mb-3">
+        <label>Salary</label>
+        <InputNumber class="form-control" @bind-Value="Employee.Salary" />
+    </div>
+
+    <div class="mb-3">
+        <label>Address</label>
+        <InputText class="form-control" @bind-Value="Employee.Address" />
+    </div>
+
+    <button class="btn btn-primary">
+        @(Employee.Id == 0 ? "Create" : "Update")
+    </button>
+
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public EmployeeDto Employee { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    private async Task SaveEmployee()
+    {
+        if (Employee.Id == 0)
+        {
+            await EmployeeService.AddEmployeeAsync(Employee);
+        }
+        else
+        {
+            await EmployeeService.UpdateEmployeeAsync(Employee);
+        }
+
+        await OnSaved.InvokeAsync();
+    }
+}
