@@ -1,61 +1,339 @@
 ﻿@using Application.Dto
 @inject IEmployeeService EmployeeService
+@inject IImageUploadService imageUploadService
+<style>
+    .image-btn {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #f59e0b;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor:pointer ;
+        transition: transform 0.2s ease;
+    }
 
-<h3>@(Employee.Id == 0 ? "Create Employee" : "Edit Employee")</h3>
+    .image-btn:hover 
+    {
+        transform: scale(1.1);
+    }
+    .image-btn:hover i 
+    {
+            animation: pulse 0.8s infinite alternate;
+    }
 
-<EditForm Model="Employee" OnValidSubmit="SaveEmployee">
+    @@keyframes pulse {
+        from {
+            transform: scale(1);
+        }
 
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+        to {
+            transform: scale(1.2);
+        }
+    }
 
-    <div class="mb-3">
-        <label>Employee Code</label>
-        <InputNumber class="form-control" @bind-Value="Employee.EmpCode" />
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .combo-box {
+        position: relative;
+    }
+
+    .dropdown-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d;
+    }
+
+    .combo-dropdown {
+        position: absolute;
+        width: 100%;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+    }
+
+    .combo-item {
+        padding: 8px 10px;
+        cursor: pointer;
+    }
+
+        .combo-item:hover {
+            background: #f1f1f1;
+        }
+</style>
+
+@if (Show)
+{
+    <div class="modal fade show modal-right d-block">
+        <div class="modal-dialog modal-right-lg">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        @(Employee.Id == 0 ? "Create Employee" : "Edit Employee")
+                    </h5>
+
+                    <button class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body pt-0">
+
+                    <EditForm Model="Employee" OnValidSubmit="SaveEmployee">
+                        <DataAnnotationsValidator />
+
+                        <div class="row">
+                            <div class="col-md-5 bg-light p-3 border-end text-center">
+
+                                <div class="position-relative d-inline-block mb-4">
+
+                                    <img src="@(string.IsNullOrEmpty(Employee.Image) ? "/default/avtar.png" : Employee.Image)"
+                                         class="rounded-circle"
+                                         style="width:120px;height:120px;object-fit:cover;border:1px solid #f59e0b;" />
+
+                                    <InputFile id="avatarUpload"
+                                               OnChange="ImageUpload"
+                                               style="display:none" />
+                                    <label for="avatarUpload" class="image-btn">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </label>
+                                    @if (Employee.Id != 0)
+                                    {
+                                        <p>@($"{Employee.Title} {Employee.FirstName} {Employee.LastName}")</p>
+                                    }
+                                </div>
+                                <div class="info-card text-start">
+                                    <h6 class="fw-bold">Contact</h6>
+                                    <p>Email: @(string.IsNullOrEmpty(Employee.Email) ? "Not set" : Employee.Email)</p>
+                                    <p>Phone: @(string.IsNullOrEmpty(Employee.PhoneNumber) ? "Not set" : Employee.PhoneNumber)</p>
+                                </div>
+
+                                <div class="info-card text-start">
+                                    <h6 class="fw-bold">Employment</h6>
+                                    <p>Join Date: @(Employee.HireDate?.ToString("dd MMM yyyy") ?? "Not set")</p>
+                                    <p>
+                                        Length of service: @(Employee.HireDate.HasValue? $"{(DateTime.Now - Employee.HireDate.Value).Days / 365} years"
+                                                                            : "Not set")
+                                    </p>
+                                </div>
+
+                                <div class="info-card text-start">
+                                    <h6 class="fw-bold">Employee Department</h6>
+                                    <p>@(string.IsNullOrWhiteSpace(NewDepartmentName)? (Employee.Department?.Name ?? "None"): NewDepartmentName)
+                                    </p>
+                                </div>
+
+                                <div class="info-card text-start">
+                                    <h6 class="fw-bold">Employee Designation</h6>
+                                    <p>@(string.IsNullOrWhiteSpace(NewDesignationName)? (Employee.Designation?.Name ?? "None"): NewDesignationName)
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-7 p-4">
+
+                                <div class="row g-3">
+                                    @* <div class="col-md-6">
+                                        <label class="form-label">Employee Code <span class="text-danger">*</span></label>
+                                        <InputText class="form-control" @bind-Value="Employee.EmpCode" />
+                                    </div> *@
+                                    <div class="col-md-6">
+                                        <label class="form-label">Title <span class="text-danger">*</span></label>
+                                        <InputSelect class="form-control" @bind-Value="Employee.Title">
+                                            <option value="">Title</option>
+                                            <option value="Sir">Sir</option>
+                                            <option value="Mr">Mr</option>
+                                            <option value="Miss">Miss</option>
+                                            <option value="Mrs">Mrs</option>
+                                            <option value="Dr">Dr</option>
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                                        <InputText class="form-control" @bind-Value="Employee.Email" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">First Name <span class="text-danger">*</span></label>
+                                        <InputText class="form-control" @bind-Value="Employee.FirstName" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Last Name</label>
+                                        <InputText class="form-control" @bind-Value="Employee.LastName" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                                        <InputText class="form-control" @bind-Value="Employee.PhoneNumber" />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Alternate Mobile</label>
+                                        <InputText class="form-control" @bind-Value="Employee.AlternatePhoneNumber" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Gender <span class="text-danger">*</span></label>
+                                        <InputSelect class="form-control" @bind-Value="Employee.Gender">
+                                            <option value="">Gender</option>
+                                            <option>Male</option>
+                                            <option>Female</option>
+                                            <option>Other</option>
+                                        </InputSelect>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Salary</label>
+                                        <InputNumber class="form-control" @bind-Value="Employee.Salary" />
+                                    </div>
+                                   
+                                    <div class="col-md-6">
+                                        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                        <InputDate class="form-control" @bind-Value="Employee.DateOfBirth" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Hire Date <span class="text-danger">*</span></label>
+                                        <InputDate class="form-control" @bind-Value="Employee.HireDate" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Department</label>
+
+                                        <div class="combo-box">
+
+                                            <InputText class="form-control"
+                                                       @bind-Value="NewDepartmentName"
+                                                       @onfocus="ShowDropdown" 
+                                                       @onblur="()=>showDepartment= false"/>
+
+                                            <span class="dropdown-icon" @onclick="Toggle1">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </span>
+                                            @if (showDepartment)
+                                            {
+                                                <div class="combo-dropdown">
+                                                    @foreach (var d in FilterDepartment)
+                                                    {
+                                                        <div class="combo-item"
+                                                             @onclick="() => Select(d)">
+                                                            @d.Name
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Designation</label>
+
+                                        <div class="combo-box">
+
+                                            <InputText class="form-control"
+                                                       @bind-Value="NewDesignationName"
+                                                       @onfocus="ShowDropdown2" 
+                                                       @onblur="()=>showDesignation = false"/>
+
+                                            <span class="dropdown-icon" @onclick="Toggle2">
+                                                <i class="bi bi-chevron-down"></i>
+                                            </span>
+                                            @if (showDesignation)
+                                            {
+                                                <div class="combo-dropdown">
+                                                    @foreach (var d in FilterDesignation)
+                                                    {
+                                                        <div class="combo-item"
+                                                             @onclick="() => Select2(d)">
+                                                            @d.Name
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                    
+
+                                    <div class="col-12">
+                                        <label class="form-label">Address <span class="text-danger">*</span></label>
+                                        <InputTextArea class="form-control"  row="3" @bind-Value="Employee.Address" />
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button"
+                                    class="btn btn-secondary"
+                                    @onclick="Close">
+                                Cancel
+                            </button>
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                @(Employee.Id == 0 ? "Create" : "Update")
+                            </button>
+
+                        </div>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label>First Name</label>
-        <InputText class="form-control" @bind-Value="Employee.FirstName" />
-    </div>
-
-    <div class="mb-3">
-        <label>Last Name</label>
-        <InputText class="form-control" @bind-Value="Employee.LastName" />
-    </div>
-
-    <div class="mb-3">
-        <label>Email</label>
-        <InputText class="form-control" @bind-Value="Employee.Email" />
-    </div>
-
-    <div class="mb-3">
-        <label>Phone</label>
-        <InputText class="form-control" @bind-Value="Employee.PhoneNumber" />
-    </div>
-
-    <div class="mb-3">
-        <label>Salary</label>
-        <InputNumber class="form-control" @bind-Value="Employee.Salary" />
-    </div>
-
-    <div class="mb-3">
-        <label>Address</label>
-        <InputText class="form-control" @bind-Value="Employee.Address" />
-    </div>
-
-    <button class="btn btn-primary">
-        @(Employee.Id == 0 ? "Create" : "Update")
-    </button>
-
-</EditForm>
+<div class="modal-backdrop fade show"></div>
+}
 
 @code {
-
+    private bool showDepartment;
+    private bool showDesignation;
     [Parameter]
     public EmployeeDto Employee { get; set; } = new();
 
     [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
     public EventCallback OnSaved { get; set; }
+    [Parameter]
+    public List<DepartmentDto> Departments { get; set; } = new();
+
+    [Parameter]
+    public List<DesignationDto> Designations { get; set; } = new();
+
+    private string? NewDepartmentName;
+    private string? NewDesignationName;
+
+
+    // DepartmentDto and Designation Sugeestion/ Filter Dropdown
+
+    private IEnumerable<DesignationDto> FilterDesignation => string.IsNullOrWhiteSpace(NewDesignationName) ? Designations :
+            Designations.Where(x => x.Name.Contains(NewDesignationName, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<DepartmentDto> FilterDepartment => string.IsNullOrWhiteSpace(NewDepartmentName) ? Departments :
+                Departments.Where(x => x.Name.Contains(NewDepartmentName, StringComparison.OrdinalIgnoreCase));
+
+
 
     private async Task SaveEmployee()
     {
@@ -69,5 +347,49 @@
         }
 
         await OnSaved.InvokeAsync();
+    }
+    private async Task ImageUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024);
+
+        var url = await imageUploadService.UploadImageAsync(stream, file.Name);
+
+        Employee.Image = url;
+    }
+    private void Toggle1()
+    {
+        showDepartment = !showDepartment;
+    }
+    private void Toggle2()
+    {
+        showDesignation = !showDesignation;
+    }
+    private void ShowDropdown()
+    {
+        showDepartment = true;
+    }
+    private void ShowDropdown2()
+    {
+        showDesignation = true;
+    }
+
+    private void Select(DepartmentDto dept)
+    {
+        NewDepartmentName = dept.Name;
+        Employee.DepartmentId = dept.Id;
+        showDepartment = false;
+    }
+    private void Select2(DesignationDto dept)
+    {
+        NewDesignationName = dept.Name;
+        Employee.DesignationId = dept.Id;
+        showDesignation = false;
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
     }
 }

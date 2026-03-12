@@ -1,14 +1,35 @@
-﻿@page "/"
+﻿@page "/employees"
 @inject IEmployeeService EmployeeService
 @rendermode InteractiveServer
 
 
-<h3>Employee List</h3>
+<div class="top-header">
 
-<button type="button" class="btn btn-success" @onclick="ShowModal">
-    Create
-</button>
-<p>Modal State: @show</p>
+    <div class="top-title">
+        <h3>Employees</h3>
+    </div>
+
+    <div class="top-actions">
+
+        <input type="text" class="search-input" placeholder="Search employees..." />
+
+            <button class="btn-create" @onclick="OpenModalAsync" disabled="@isLoading">
+
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span> 
+                <span>Loading..</span>
+                }
+                else
+                {
+                    <span>+ Create</span>
+                }
+
+            </button>
+
+    </div>
+
+</div>
 @if (employees == null)
 {
     <p><em>Loading...</em></p>
@@ -50,38 +71,23 @@ else
         </button>
     </div>
 }
-@if (show)
-{
-    <div class="modal fade show " style="display:block">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+<CreateEditEmployee Employee="selectedEmployee"Departments="departments"Designations="designations" Show="show"
+                    OnClose="CloseModal"
+                    OnSaved="HandleSaved" />
 
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        @(selectedEmployee.Id == 0 ? "Create Employee" : "Edit Employee")
-                    </h5>
 
-                    <button class="btn-close" @onclick="CloseModal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <CreateEditEmployee Employee="selectedEmployee"
-                                        OnSaved="HandleSaved" />
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-backdrop fade show"></div>
-}
 @code {
     private bool show;
+    private bool isLoading;
     private List<EmployeeDto> employees = new();
     private EmployeeDto selectedEmployee = new();
     private int pageNumber = 1;
     private int pageSize = 10;
     private int totalCount;
+    private List<DepartmentDto> departments = new();
+    private List<DesignationDto> designations = new();
+
+   
 
     private bool HasPrevious => pageNumber > 1;
 
@@ -89,6 +95,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        //departments = await EmployeeService.GetDepartmentsAsync();
+        //designations = await EmployeeService.GetDesignationsAsync();
         await LoadEmployees();
     }
 
@@ -114,6 +122,16 @@ else
         show = false;
 
         await LoadEmployees();
+    }
+    private async Task OpenModalAsync()
+    {
+        isLoading = true;
+
+        await Task.Delay(300); 
+
+        ShowModal();
+
+        isLoading = false;
     }
     private void ShowModal()
     {

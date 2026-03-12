@@ -16,6 +16,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
+
+//Add Repositories
 builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();
 
 

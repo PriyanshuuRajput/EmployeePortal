@@ -25,6 +25,7 @@ namespace EmployeePortal.Services
                 {
                     Id = e.Id,
                     EmpCode = e.EmpCode,
+                    Title = e.Title,
                     FirstName = e.FirstName,
                     LastName = e.LastName,
                     Email = e.Email,
@@ -66,6 +67,7 @@ namespace EmployeePortal.Services
                 {
                     Id = e.Id,
                     EmpCode = e.EmpCode,
+                    Title = e.Title,
                     FirstName = e.FirstName,
                     LastName = e.LastName,
                     Email = e.Email,
@@ -93,6 +95,7 @@ namespace EmployeePortal.Services
                 var e = new Employee
                 {
                     EmpCode = employeeDto.EmpCode,
+                    Title = employeeDto.Title,
                     FirstName = employeeDto.FirstName,
                     LastName = employeeDto.LastName,
                     Email = employeeDto.Email,
@@ -126,6 +129,7 @@ namespace EmployeePortal.Services
                 {
                     Id = employeeDto.Id,
                     EmpCode = employeeDto.EmpCode,
+                    Title = employeeDto.Title,  
                     FirstName = employeeDto.FirstName,
                     LastName = employeeDto.LastName,
                     Email = employeeDto.Email,
