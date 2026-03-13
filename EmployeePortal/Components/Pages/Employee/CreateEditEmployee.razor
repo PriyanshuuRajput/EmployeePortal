@@ -1,4 +1,5 @@
 ﻿@using Application.Dto
+@using EmployeePortal.Components.CustomComponents
 @inject IEmployeeService EmployeeService
 @inject IImageUploadService imageUploadService
 <style>
@@ -101,8 +102,12 @@
 
                         <div class="row">
                             <div class="col-md-5 bg-light p-3 border-end text-center">
-
-                                <div class="position-relative d-inline-block mb-4">
+                                <div class="mb-2 text-start">
+                                    <span class="badge button p-2 fw-semibold ">
+                                        EmpCode: @Employee.EmpCode
+                                    </span>
+                                </div>
+                                <div class="position-relative d-inline-block mb-3">
 
                                     <img src="@(string.IsNullOrEmpty(Employee.Image) ? "/default/avtar.png" : Employee.Image)"
                                          class="rounded-circle"
@@ -114,11 +119,12 @@
                                     <label for="avatarUpload" class="image-btn">
                                         <i class="bi bi-pencil-square"></i>
                                     </label>
-                                    @if (Employee.Id != 0)
-                                    {
-                                        <p>@($"{Employee.Title} {Employee.FirstName} {Employee.LastName}")</p>
-                                    }
+                                   
                                 </div>
+                                @if (Employee.Id != 0)
+                                {
+                                    <p class="fw-semibold text-muted">@($"{Employee.Title} {Employee.FirstName} {Employee.LastName}")</p>
+                                }
                                 <div class="info-card text-start">
                                     <h6 class="fw-bold">Contact</h6>
                                     <p>Email: @(string.IsNullOrEmpty(Employee.Email) ? "Not set" : Employee.Email)</p>
@@ -155,47 +161,70 @@
                                     </div> *@
                                     <div class="col-md-6">
                                         <label class="form-label">Title <span class="text-danger">*</span></label>
-                                        <InputSelect class="form-control" @bind-Value="Employee.Title">
-                                            <option value="">Title</option>
+                                        <div class="position-relative">
+                                            <InputSelect class="form-control" @bind-Value="Employee.Title">
+                                            <option value=""></option>
                                             <option value="Sir">Sir</option>
                                             <option value="Mr">Mr</option>
                                             <option value="Miss">Miss</option>
                                             <option value="Mrs">Mrs</option>
                                             <option value="Dr">Dr</option>
-                                        </InputSelect>
+                                            </InputSelect>
+                                            <i class="bi bi-chevron-down dropdown-icon"></i>
+                                        <ValidationMessage For=@(() => Employee.Title) />
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email <span class="text-danger">*</span></label>
                                         <InputText class="form-control" @bind-Value="Employee.Email" />
+                                        <ValidationMessage For=@(() => Employee.Email) />
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label">First Name <span class="text-danger">*</span></label>
-                                        <InputText class="form-control" @bind-Value="Employee.FirstName" />
+                                        <InputText class="form-control" maxlength="50" @bind-Value="Employee.FirstName" />
+                                        <ValidationMessage For=@(() => Employee.FirstName) />
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label">Last Name</label>
-                                        <InputText class="form-control" @bind-Value="Employee.LastName" />
+                                        <InputText class="form-control" maxlength="50" @bind-Value="Employee.LastName" />
+                                        <ValidationMessage For=@(() => Employee.LastName) />
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
-                                        <InputText class="form-control" @bind-Value="Employee.PhoneNumber" />
+                                        <div class="input-group">
+                                            <span class="input-group-text">+91</span>
+                                            <InputText class="form-control"
+                                                       maxlength="10"
+                                                       pattern="[0-9]{10}"
+                                                       inputmode="numeric"
+                                                       @bind-Value="Employee.PhoneNumber" />
+                                        </div>
+                                        <ValidationMessage For=@(() => Employee.PhoneNumber) />
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label">Alternate Mobile</label>
-                                        <InputText class="form-control" @bind-Value="Employee.AlternatePhoneNumber" />
+                                        <div class="input-group">
+                                        <span class="input-group-text">+91</span>
+                                            <InputText class="form-control" maxlength="10"
+                                                       pattern="[0-9]{10}"
+                                                       inputmode="numeric"
+                                                       @bind-Value="Employee.AlternatePhoneNumber" />
+                                        </div>
+                                        <ValidationMessage For=@(() => Employee.AlternatePhoneNumber) />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Gender <span class="text-danger">*</span></label>
-                                        <InputSelect class="form-control" @bind-Value="Employee.Gender">
-                                            <option value="">Gender</option>
-                                            <option>Male</option>
-                                            <option>Female</option>
-                                            <option>Other</option>
-                                        </InputSelect>
+                                        <label class="form-label">Gender</label>
+                                                <InputSelect class="form-control" @bind-Value="Employee.Gender" disabled>
+                                                    <option value=""></option>
+                                                    <option>Male</option>
+                                                    <option>Female</option>
+                                                    <option>Other</option>
+                                                </InputSelect>
+                                        <ValidationMessage For=@(() => Employee.Gender) />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Salary</label>
@@ -205,13 +234,15 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
                                         <InputDate class="form-control" @bind-Value="Employee.DateOfBirth" />
+                                        <ValidationMessage For=@(() => Employee.DateOfBirth) />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Hire Date <span class="text-danger">*</span></label>
                                         <InputDate class="form-control" @bind-Value="Employee.HireDate" />
+                                        <ValidationMessage For=@(() => Employee.HireDate) />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Department</label>
+                                        <label class="form-label">Department <span class="text-danger">*</span></label>
 
                                         <div class="combo-box">
 
@@ -236,9 +267,10 @@
                                                 </div>
                                             }
                                         </div>
+                                        <ValidationMessage For=@(() => Employee.DepartmentId) />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Designation</label>
+                                        <label class="form-label">Designation <span class="text-danger">*</span></label>
 
                                         <div class="combo-box">
 
@@ -263,12 +295,14 @@
                                                 </div>
                                             }
                                         </div>
+                                        <ValidationMessage For=@(() => Employee.DesignationId) />
                                     </div>
                                     
 
                                     <div class="col-12">
                                         <label class="form-label">Address <span class="text-danger">*</span></label>
-                                        <InputTextArea class="form-control"  row="3" @bind-Value="Employee.Address" />
+                                        <InputTextArea class="form-control" maxlength="250" rows="3" @bind-Value="Employee.Address" />
+                                        <ValidationMessage For=@(() => Employee.Address) />
                                     </div>
 
                                 </div>
@@ -285,8 +319,19 @@
                             </button>
 
                             <button type="submit"
-                                    class="btn btn-primary">
-                                @(Employee.Id == 0 ? "Create" : "Update")
+                                    class="btn button"
+                                    disabled="@isSave">
+
+                                @if (isSave)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <span>Save</span>
+                                }
+
                             </button>
 
                         </div>
@@ -300,8 +345,11 @@
     </div>
 <div class="modal-backdrop fade show"></div>
 }
+<MessagePopup Show="@showMessage"  Message="@messageText" OnClose="CloseMessage" />
 
 @code {
+    private bool showMessage = false;
+    private bool isSave;
     private bool showDepartment;
     private bool showDesignation;
     [Parameter]
@@ -323,6 +371,7 @@
 
     private string? NewDepartmentName;
     private string? NewDesignationName;
+    private string messageText = "";
 
 
     // DepartmentDto and Designation Sugeestion/ Filter Dropdown
@@ -337,16 +386,44 @@
 
     private async Task SaveEmployee()
     {
-        if (Employee.Id == 0)
-        {
-            await EmployeeService.AddEmployeeAsync(Employee);
-        }
-        else
-        {
-            await EmployeeService.UpdateEmployeeAsync(Employee);
-        }
+        try{
+            isSave = true;
+            StateHasChanged();
+            if (Employee.DesignationId == 0)
+            {
+                messageText = "Designation is required";
+                showMessage = true;
+                isSave = false;
+                return;
+            }
 
-        await OnSaved.InvokeAsync();
+            if (Employee.DepartmentId == 0)
+            {
+                messageText = "Department is required";
+                showMessage = true;
+                isSave = false;
+                return;
+            }
+
+            if (Employee.Id == 0)
+                await EmployeeService.AddEmployeeAsync(Employee);
+            else
+                await EmployeeService.UpdateEmployeeAsync(Employee);
+
+            if (OnSaved.HasDelegate)
+            {
+                await InvokeAsync(() => OnSaved.InvokeAsync());
+            }
+        }
+        catch (Exception e)
+        {
+            messageText = e.Message;
+            showMessage = true;
+        }
+        finally
+        {
+            isSave = false;
+        }
     }
     private async Task ImageUpload(InputFileChangeEventArgs e)
     {
@@ -355,9 +432,19 @@
         using var stream = file.OpenReadStream(5 * 1024 * 1024);
 
         var url = await imageUploadService.UploadImageAsync(stream, file.Name);
-
         Employee.Image = url;
     }
+
+//     private void SyncGender(ChangeEventArgs e)
+// {
+//     Employee.Title = e.Value?.ToString() ?? "";
+
+//     if (Employee.Title == "Mr" || Employee.Title == "Sir" || Employee.Title == "Dr")
+//         Employee.Gender = "Male";
+//     else if (Employee.Title == "Miss" || Employee.Title == "Mrs")
+//         Employee.Gender = "Female";
+// }
+
     private void Toggle1()
     {
         showDepartment = !showDepartment;
@@ -391,5 +478,9 @@
     private async Task Close()
     {
         await OnClose.InvokeAsync();
+    }
+    private void CloseMessage()
+    {
+        showMessage = false;
     }
 }

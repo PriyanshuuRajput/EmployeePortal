@@ -1,8 +1,82 @@
 ﻿@page "/employees"
 @inject IEmployeeService EmployeeService
+@inject IDepartmentService DepartmentService
+@inject IDesignationService DesignationService
 @rendermode InteractiveServer
 
+<style>
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
 
+    .employee-table {
+        min-width: 1100px;
+    }
+
+        .employee-table th,
+        .employee-table td {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+    .employee-table table {
+        min-width: 1000px;
+    }
+
+        .employee-table th.action-column {
+            position: sticky;
+            right: 0;
+            background: #f8f9fa;
+        }
+    .emp-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .action-column {
+        position: sticky;
+        right: 0;
+        background: white;
+        min-width: 120px;
+        text-align: center;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+        z-index: 2;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .edit-btn {
+        background: #eef4ff;
+        color: #f59e0b;
+    }
+
+        .edit-btn:hover {
+            background: #dbe7ff;
+        }
+
+    .delete-btn {
+        background: #fff1f2;
+        color: #ef4444;
+    }
+
+        .delete-btn:hover {
+            background: #ffe4e6;
+        }
+</style>
 <div class="top-header">
 
     <div class="top-title">
@@ -11,7 +85,11 @@
 
     <div class="top-actions">
 
-        <input type="text" class="search-input" placeholder="Search employees..." />
+     <input type="text"
+       class="search-input"
+       placeholder="Search employees..."
+       @bind="searchText"
+       @oninput="Search" />
 
             <button class="btn-create" @onclick="OpenModalAsync" disabled="@isLoading">
 
@@ -36,31 +114,89 @@
 }
 else
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Emp Code</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Salary</th>
-            </tr>
-        </thead>
+<div class="table-container">
+<table class="table employee-table table-hover align-middle mb-0">
 
-        <tbody>
-            @foreach (var emp in employees)
-            {
+            <thead class="table-light">
                 <tr>
-                    <td>@emp.EmpCode</td>
-                    <td>@emp.FirstName @emp.LastName</td>
-                    <td>@emp.Email</td>
-                    <td>@emp.PhoneNumber</td>
-                    <td>@emp.Salary</td>
+                    <th style="width:60px"></th>
+                    <th>EmpCode</th>
+                    <th>Employee</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Hire Date</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Salary</th>
+                    <th class="text-end action-column">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
 
+            <tbody>
+
+                @foreach (var emp in employees)
+                {
+                    <tr>
+
+                        <td>
+                            <img src="@(string.IsNullOrEmpty(emp.Image) ? "/default/avtar.png" : emp.Image)"
+                                 class="emp-avatar" />
+                        </td>
+                        <td>
+                            @emp.EmpCode
+                        </td>
+                        <td>
+                            @emp.FirstName @emp.LastName
+                        </td>
+
+                        <td>@emp.Email</td>
+
+                        <td>
+                            @emp.PhoneNumber
+                            @if (!string.IsNullOrWhiteSpace(emp.AlternatePhoneNumber))
+                            {
+                                <br />
+                                <small class="text-muted">@emp.AlternatePhoneNumber</small>
+                            }
+                        </td>
+
+                        <td>@emp.HireDate?.ToString("dd MMM yyyy")</td>
+
+                        <td>@emp.Department?.Name</td>
+
+                        <td>@emp.Designation?.Name</td>
+
+                        <td class="fw-semibold">₹ @emp.Salary.ToString("N0")</td>
+
+                        <td class="text-end action-column">
+
+                            <div class="action-buttons">
+
+                                <button class="btn btn-icon edit-btn"
+                                        title="Edit"
+                                        style="border-radius: 10px 0px 0px 10px;"
+                                        @onclick="() => EditEmployee(emp.Id)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <button class="btn btn-icon delete-btn"
+                                        title="Delete"
+                                        style="border-radius: 0px 10px 10px 0px;"
+                                        @onclick="() => DeleteEmployee(emp.Id)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+        </div>        
     <div class="mt-3">
         <button class="btn btn-primary me-2" @onclick="PreviousPage" disabled="@(!HasPrevious)">
             Previous
@@ -81,13 +217,15 @@ else
     private bool isLoading;
     private List<EmployeeDto> employees = new();
     private EmployeeDto selectedEmployee = new();
+    private string searchText = "";
+    private CancellationTokenSource cts { get; set; } = new();
     private int pageNumber = 1;
     private int pageSize = 10;
     private int totalCount;
     private List<DepartmentDto> departments = new();
     private List<DesignationDto> designations = new();
 
-   
+
 
     private bool HasPrevious => pageNumber > 1;
 
@@ -95,14 +233,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        //departments = await EmployeeService.GetDepartmentsAsync();
-        //designations = await EmployeeService.GetDesignationsAsync();
+        departments = await DepartmentService.GetAllAsync();
+        designations = await DesignationService.GetAllDesignationsAsync();
         await LoadEmployees();
     }
 
     private async Task LoadEmployees()
     {
-        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize);
+        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize,searchText);
 
         employees = result.Items;
         totalCount = result.TotalCount;
@@ -122,6 +260,30 @@ else
         show = false;
 
         await LoadEmployees();
+    }
+    private async Task DeleteEmployee(int id)
+    {
+       
+            await EmployeeService.DeleteEmployeeAsync(id);
+            await LoadEmployees();
+        
+    }
+    private async Task Search(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+
+        cts.Cancel();
+        cts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(500, cts.Token);
+            pageNumber = 1;
+            await LoadEmployees();
+        }
+        catch (TaskCanceledException)
+        {
+        }
     }
     private async Task OpenModalAsync()
     {

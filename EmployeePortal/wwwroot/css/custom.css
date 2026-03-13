@@ -51,7 +51,11 @@
     .btn-create:hover {
         background: #f59e0b;
     }
-
+.button {
+    background-color: #f59e0b !important;
+    border-color: #f59e0b !important;
+    color: white;
+}
 
 /*    Modal styling from right side*/
 
@@ -82,7 +86,7 @@
 }
 
 .modal-body {
-    overflow:hidden;
+    overflow-y:auto;
 }
 
 .modal-header {
@@ -93,6 +97,7 @@
     padding: 20px 20px;
     gap: 10px;*/
 }
+
 
 .table {
     background: white;

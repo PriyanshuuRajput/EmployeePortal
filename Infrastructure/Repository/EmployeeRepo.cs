@@ -15,7 +15,7 @@ namespace Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize)
+        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search)
         {
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
@@ -25,11 +25,23 @@ namespace Infrastructure.Repository
 
             try
             {
+
                 var query = _context.Employees.AsQueryable();
 
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query.Where(e =>
+                        e.FirstName.Contains(search) ||
+                        e.LastName.Contains(search) ||
+                        e.Email.Contains(search) ||
+                        e.EmpCode.Contains(search));
+                }
                 totalCount = await query.CountAsync();
 
                 employees = await query
+                    .Include(e => e.Designation)
+                    .ThenInclude(d=>d.Department)
+                    .OrderBy(e => e.Id)
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
@@ -51,9 +63,12 @@ namespace Infrastructure.Repository
         {
             try
             {
-                var employee = _context.Employees.FindAsync(id);
-                return await employee;
+                var employee = await _context.Employees
+                    .Include(e => e.Designation)
+                    .ThenInclude(d => d.Department)
+                    .FirstOrDefaultAsync(e => e.Id == id);
 
+                return employee;
             }
             catch (Exception ex)
             {
@@ -62,11 +77,18 @@ namespace Infrastructure.Repository
             }
         }
 
+        public async Task<Employee?> GetEmployeeByEmailAsync(string email)
+        {
+                var e= await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Email == email);
+                return e;
+        }
+
         public async Task AddEmployeeAsync(Employee employee)
         {
             try
             {
-                var employees = _context.Employees.AddAsync(employee);
+                await _context.Employees.AddAsync(employee);
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -79,13 +101,30 @@ namespace Infrastructure.Repository
         {
             try
             {
-                var existingEmployee = _context.Employees.Update(employee);
+                var existingEmployee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.Id == employee.Id);
+
+                if (existingEmployee == null)
+                    return;
+                existingEmployee.Title = employee.Title;
+                existingEmployee.FirstName = employee.FirstName;
+                existingEmployee.LastName = employee.LastName;
+                existingEmployee.Email = employee.Email;
+                existingEmployee.PhoneNumber = employee.PhoneNumber;
+                existingEmployee.AlternatePhoneNumber = employee.AlternatePhoneNumber;
+                existingEmployee.Gender = employee.Gender;
+                existingEmployee.DateofBirth = employee.DateofBirth;
+                existingEmployee.HireDate = employee.HireDate;
+                existingEmployee.DesignationId = employee.DesignationId;
+                existingEmployee.Salary = employee.Salary;
+                existingEmployee.Address = employee.Address;
+                existingEmployee.Image = employee.Image;
+
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("An error occurred while updating the employee: " + ex.Message);
-
             }
         }
         public async Task DeleteEmployeeAsync(int id)
