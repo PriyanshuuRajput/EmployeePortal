@@ -1,25 +1,30 @@
-﻿using Application.Interfaces.IService;
-using Domain.Common;
+﻿using Application.Dto;
 using Application.Interfaces.IRepo;
-using Application.Dto;
+using Application.Interfaces.IService;
+using Domain.Common;
 using Domain.Entities;
+using Infrastructure.Repository;
 
 namespace EmployeePortal.Services
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepo _employeeRepo;
+        private readonly IDepartmentRepo _departmentRepo;
+        private readonly IDesignationRepo _designationRepo;
 
-        public EmployeeService(IEmployeeRepo employeeRepo)
+        public EmployeeService(IEmployeeRepo employeeRepo, IDepartmentRepo departmentRepo, IDesignationRepo designationRepo)
         {
             _employeeRepo = employeeRepo;
+            _departmentRepo = departmentRepo;
+            _designationRepo = designationRepo;
         }
 
-        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize)
+        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search)
         {
             try
             {
-                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize);
+                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize,search);
 
                 var result = emp.Items.Select(e => new EmployeeDto
                 {
@@ -34,10 +39,22 @@ namespace EmployeePortal.Services
                     Gender = e.Gender,
                     DateOfBirth = e.DateofBirth,
                     HireDate = e.HireDate,
-                    DesignationId = e.DesignationId,
                     Salary = e.Salary,
                     Address = e.Address,
-                    Image = e.Image
+                    IsActive = e.IsActive,
+                    Image = e.Image,
+                    Designation = e.Designation == null ? null : new DesignationDto
+                    {
+                        Id = e.Designation.Id,
+                        Name = e.Designation.Name,
+                        DepartmentId = e.Designation.DepartmentId
+                    },
+
+                    Department = e.Designation?.Department == null ? null : new DepartmentDto
+                    {
+                        Id = e.Designation.Department.Id,
+                        Name = e.Designation.Department.Name
+                    }
 
                 }).ToList();
 
@@ -76,10 +93,20 @@ namespace EmployeePortal.Services
                     Gender = e.Gender,
                     DateOfBirth = e.DateofBirth,
                     HireDate = e.HireDate,
-                    DesignationId = e.DesignationId,
                     Salary = e.Salary,
                     Address = e.Address,
-                    Image = e.Image
+                    Image = e.Image,
+                    Designation = e.Designation == null ? null : new DesignationDto
+                    {
+                        Id = e.Designation.Id,
+                        Name = e.Designation.Name
+                    },
+
+                    Department = e.Designation?.Department == null ? null : new DepartmentDto
+                    {
+                        Id = e.Designation.Department.Id,
+                        Name = e.Designation.Department.Name
+                    }
                 };
             }
             catch (Exception ex)
@@ -88,13 +115,19 @@ namespace EmployeePortal.Services
             }
 
         }
+
         public async Task AddEmployeeAsync(EmployeeDto employeeDto)
         {
             try
             {
+                var existingEmployee = await _employeeRepo.GetEmployeeByEmailAsync(employeeDto.Email);
+
+                if (existingEmployee != null)
+                {
+                    throw new Exception("Email already exists");
+                }
                 var e = new Employee
                 {
-                    EmpCode = employeeDto.EmpCode,
                     Title = employeeDto.Title,
                     FirstName = employeeDto.FirstName,
                     LastName = employeeDto.LastName,
@@ -109,7 +142,20 @@ namespace EmployeePortal.Services
                     Address = employeeDto.Address,
                     Image = employeeDto.Image
                 };
+
                 await _employeeRepo.AddEmployeeAsync(e);
+                var designation = await _designationRepo.GetDesignationByIdAsync(employeeDto.DesignationId);
+                if (designation != null)
+                {
+                    var dept = await _departmentRepo.GetDepartmentByIdAsync(designation.DepartmentId);
+
+                    if (dept != null)
+                    {
+                        e.EmpCode = EmpCodeMethod(dept.Name, e.Id);
+
+                        await _employeeRepo.UpdateEmployeeAsync(e);
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -129,7 +175,7 @@ namespace EmployeePortal.Services
                 {
                     Id = employeeDto.Id,
                     EmpCode = employeeDto.EmpCode,
-                    Title = employeeDto.Title,  
+                    Title = employeeDto.Title,
                     FirstName = employeeDto.FirstName,
                     LastName = employeeDto.LastName,
                     Email = employeeDto.Email,
@@ -158,6 +204,29 @@ namespace EmployeePortal.Services
             if (emp == null) throw new Exception("Employee not found");
             await _employeeRepo.DeleteEmployeeAsync(id);
 
+        }
+
+        //Empcode method 
+        private string EmpCodeMethod(string deptName, int id)
+        {
+            var y = DateTime.Now.Year.ToString().Substring(2);
+
+            string deptcode = "";
+            if (!string.IsNullOrEmpty(deptName))
+            {
+                deptcode += deptName[0];
+                if (deptName.Length > 2)
+                {
+                    deptcode += deptName[deptName.Length / 2];
+                }
+                if (deptName.Length > 1)
+                {
+                    deptcode += deptName[^1];
+                }
+                deptcode = deptcode.ToUpper();
+
+            }
+            return $"{y}{deptcode}{id}";
         }
     }
 }

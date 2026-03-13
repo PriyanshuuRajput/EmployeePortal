@@ -1,0 +1,47 @@
+﻿
+<style>
+    .modal-footer{
+        padding:12px;
+    }
+    .button{
+        background-color: #f59e0b !important;
+        border-color: #f59e0b !important;
+        color:white;
+    }
+</style>@if (Show)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button class="btn-close" @onclick="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <h5 class="text-muted">@Message</h5>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn button" @onclick="Close">Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string Title { get; set; } = "Message";
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

@@ -7,9 +7,12 @@
 }
 
 .navbar-brand {
-    font-size: 1.2rem;
+    font-size: 22px;
     font-weight: 600;
     color: white;
+    color: #f59e0b;
+    border-bottom: 2px solid #f59e0b;
+    padding-bottom: 3px;
 }
 .menu-title {
     font-size: 12px;
@@ -103,11 +106,6 @@ hr {
 }
 
 @media (min-width:768px){
-
-    .page{
-        flex-direction:row;
-    }
-
     .nav-scrollable{
         display:block;
         height:calc(100vh - 3.5rem);
@@ -116,15 +114,6 @@ hr {
 
     .navbar-toggler{
         display:none;
-    }
-
-}
-@media (max-width:767px){
-
-    .sidebar{
-        width:100%;
-        height:auto;
-        position:relative;
     }
 
 }
