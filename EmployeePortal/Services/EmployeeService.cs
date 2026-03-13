@@ -41,6 +41,7 @@ namespace EmployeePortal.Services
                     HireDate = e.HireDate,
                     Salary = e.Salary,
                     Address = e.Address,
+                    IsActive = e.IsActive,
                     Image = e.Image,
                     Designation = e.Designation == null ? null : new DesignationDto
                     {

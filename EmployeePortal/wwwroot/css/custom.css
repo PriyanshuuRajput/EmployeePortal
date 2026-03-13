@@ -90,7 +90,8 @@
 }
 
 .modal-header {
-    border-bottom: 4px solid #e5e7eb;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 10px 16px;
 }
 .modal-footer {
 /*    border-top: 1px solid #e5e7eb;

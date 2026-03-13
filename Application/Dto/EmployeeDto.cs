@@ -59,5 +59,6 @@ namespace Application.Dto
         [Required(ErrorMessage = "Address is required.")]
         [MaxLength(250, ErrorMessage = "Address cannot exceed 250 characters")]
         public string Address { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
     }
 }
