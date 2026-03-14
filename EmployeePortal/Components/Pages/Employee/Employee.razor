@@ -3,6 +3,8 @@
 @inject IEmployeeService EmployeeService
 @inject IDepartmentService DepartmentService
 @inject IDesignationService DesignationService
+@inject ExportService ExportService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <style>
@@ -44,6 +46,12 @@
         object-fit: cover;
     }
 
+    .ellipsis {
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .action-column {
         position: sticky;
         right: 0;
@@ -214,23 +222,8 @@
             <i class="bi bi-arrow-clockwise"></i> Reset
         </button>
     </div>
-
 </div>
-@* <div class="filter-bar">
 
-   
-
-    <select class="form-select filter-select">
-        <option value="">Status</option>
-        <option>Active</option>
-        <option>Inactive</option>
-    </select>
-
-    <input type="date" class="form-control filter-date">
-
-    
-
-</div> *@
 @if (employees == null)
 {
     <p><em>Loading...</em></p>
@@ -243,7 +236,7 @@ else
             <thead class="table-light">
                 <tr>
                     <th>
-                        <input type="checkbox" @onchange="CheckAllEmployees" />
+                        <input style="accent-color: #43536a" ; type="checkbox" @onchange="CheckAllEmployees" />
                     </th>
                     <th style="width:60px"></th>
                     <th>EmpCode</th>
@@ -265,6 +258,7 @@ else
                     <tr>
                         <td>
                             <input type="checkbox"
+                                   style="accent-color: #43536a" ;
                                    checked="@checkedEmployees.Contains(emp.Id)"
                                    @onchange="(e) => CheckEmployee(emp.Id, e)" />
                         </td>
@@ -272,16 +266,16 @@ else
                             <img src="@(string.IsNullOrEmpty(emp.Image) ? "/default/avtar.png" : emp.Image)"
                                  class="emp-avatar" />
                         </td>
-                        <td>
+                        <td class="ellipsis" title="@emp.EmpCode">
                             @emp.EmpCode
                         </td>
-                        <td>
+                        <td class="ellipsis" title="@emp.FirstName @emp.LastName">
                             @emp.FirstName @emp.LastName
                         </td>
 
-                        <td>@emp.Email</td>
+                        <td class="ellipsis" title="@emp.Email">@emp.Email</td>
 
-                        <td>
+                        <td class="ellipsis" title="@emp.PhoneNumber">
                             @emp.PhoneNumber
                             @* @if (!string.IsNullOrWhiteSpace(emp.AlternatePhoneNumber))
                             {
@@ -290,13 +284,13 @@ else
                             } *@
                         </td>
 
-                        <td>@emp.HireDate?.ToString("dd MMM yyyy")</td>
+                        <td class="ellipsis" title="@emp.HireDate">@emp.HireDate?.ToString("dd MMM yyyy")</td>
 
-                        <td>@emp.Department?.Name</td>
+                        <td class="ellipsis" title="@emp.Department">@emp.Department?.Name</td>
 
-                        <td>@emp.Designation?.Name</td>
+                        <td class="ellipsis" title="@emp.Designation">@emp.Designation?.Name</td>
 
-                        <td class="fw-semibold">₹ @emp.Salary.ToString("N0")</td>
+                        <td class="ellipsis" title="@emp.Salary">₹ @emp.Salary.ToString("N0")</td>
 
                         <td class="text-end action-column">
                                 <div class="d-flex justify-content-end align-items-center gap-2">
@@ -542,13 +536,24 @@ else
                 checkedEmployees.Remove(emp.Id);
         }
     }
-    private void ExportPdf()
+    private async Task ExportPdf()
     {
-        Console.WriteLine("Export PDF clicked");
+        var selected = employees.Where(e => checkedEmployees.Contains(e.Id)).ToList();
+
+        var bytes = ExportService.ExportPdfService(selected);
+
+        await JS.InvokeVoidAsync("downloadFile","employees.pdf",Convert.ToBase64String(bytes),"application/pdf"
+        );
     }
 
-    private void ExportExcel()
+    private async Task ExportExcel()
     {
-        Console.WriteLine("Export Excel clicked");
+        var selected = employees.Where(e => checkedEmployees.Contains(e.Id)).ToList();
+
+        var bytes = ExportService.ExportExcelService(selected);
+
+        await JS.InvokeVoidAsync("downloadFile","employees.xlsx",
+            Convert.ToBase64String(bytes),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
     }
 }
