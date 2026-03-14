@@ -20,11 +20,11 @@ namespace EmployeePortal.Services
             _designationRepo = designationRepo;
         }
 
-        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search)
+        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search,int? selectedDepartment,int? selectedDesignation)
         {
             try
             {
-                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize,search);
+                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize,search,selectedDepartment, selectedDesignation);
 
                 var result = emp.Items.Select(e => new EmployeeDto
                 {
@@ -96,6 +96,8 @@ namespace EmployeePortal.Services
                     Salary = e.Salary,
                     Address = e.Address,
                     Image = e.Image,
+                    DesignationId = e.DesignationId,
+                    DepartmentId = e.Designation?.DepartmentId ?? 0,
                     Designation = e.Designation == null ? null : new DesignationDto
                     {
                         Id = e.Designation.Id,
@@ -137,14 +139,14 @@ namespace EmployeePortal.Services
                     Gender = employeeDto.Gender,
                     DateofBirth = employeeDto.DateOfBirth,
                     HireDate = employeeDto.HireDate,
-                    DesignationId = employeeDto.DesignationId,
+                    DesignationId = employeeDto.DesignationId??0,
                     Salary = employeeDto.Salary,
                     Address = employeeDto.Address,
                     Image = employeeDto.Image
                 };
 
                 await _employeeRepo.AddEmployeeAsync(e);
-                var designation = await _designationRepo.GetDesignationByIdAsync(employeeDto.DesignationId);
+                var designation = await _designationRepo.GetDesignationByIdAsync(employeeDto.DesignationId??0);
                 if (designation != null)
                 {
                     var dept = await _departmentRepo.GetDepartmentByIdAsync(designation.DepartmentId);
@@ -184,7 +186,7 @@ namespace EmployeePortal.Services
                     Gender = employeeDto.Gender,
                     DateofBirth = employeeDto.DateOfBirth,
                     HireDate = employeeDto.HireDate,
-                    DesignationId = employeeDto.DesignationId,
+                    DesignationId = employeeDto.DesignationId ?? 0,
                     Salary = employeeDto.Salary,
                     Address = employeeDto.Address,
                     Image = employeeDto.Image

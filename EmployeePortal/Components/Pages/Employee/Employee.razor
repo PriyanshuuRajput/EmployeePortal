@@ -1,10 +1,15 @@
 ﻿@page "/employees"
+@using EmployeePortal.Components.CustomComponents
 @inject IEmployeeService EmployeeService
 @inject IDepartmentService DepartmentService
 @inject IDesignationService DesignationService
 @rendermode InteractiveServer
 
 <style>
+
+    .filter-select {
+        width: 150px;
+    }
     .table-container {
         width: 100%;
         overflow-x: auto;
@@ -12,18 +17,15 @@
         border-radius: 10px;
         background: white;
     }
+    .employee-table {
+        min-width: 1200px;
+    }
 
         .employee-table th,
         .employee-table td {
             white-space: nowrap;
             vertical-align: middle;
-        }
-        .employee-table th.action-column {
-            position: sticky;
-            top: 0;
-            left:0;
-            z-index: 5;
-            background: #f8f9fa;
+            position:relative;
         }
 
     .employee-table tbody tr {
@@ -49,7 +51,7 @@
         min-width: 120px;
         text-align: center;
         box-shadow: -2px 0 4px rgba(0,0,0,0.05);
-        z-index: 2;
+        z-index: 10;
     }
 
     .action-buttons {
@@ -134,32 +136,6 @@
         border-bottom-right-radius: 10px;
     }
 </style>
-<style>
-    .filter-bar {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 15px;
-        align-items: center;
-        justify-content:end;
-    }
-
-    .filter-select {
-        width: 180px;
-    }
-
-    .filter-date {
-        width: 170px;
-    }
-
-    .filter-reset {
-        border: 1px solid #e5e7eb;
-    }
-
-        .filter-reset:hover {
-            background: #f59e0b;
-            color: white;
-        }
-</style>
 <div class="top-header">
 
     <div class="top-title">
@@ -167,44 +143,82 @@
     </div>
 
     <div class="top-actions">
+        <select class="form-select filter-select" @bind="selectedDepartmentId" @bind:after="ApplyFilter">>
+           <option value="" disabled selected>Department</option>
+           @foreach (var dept in departments)
+            {
+                <option value="@dept.Id">@dept.Name</option>
+            }
+        </select>
+        <select class="form-select filter-select" @bind="selectedDesignationId" @bind:after="ApplyFilter">
+            <option value="" disabled selected>Designation</option>
+            @foreach (var des in designations)
+            {
+                <option value="@des.Id">@des.Name</option>
+            }
+        </select>
+        <div class="input-group" style="width:250px;">
 
-     <input type="text"
-       class="search-input"
-       placeholder="Search employees..."
-       @bind="searchText"
-       @oninput="Search" />
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search employees..."
+                   @bind="searchText"
+                   @oninput="Search" />
 
-            <button class="btn-create" @onclick="OpenModalAsync" disabled="@isLoading">
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
 
-                @if (isLoading)
-                {
-                    <span class="spinner-border spinner-border-sm me-2"></span> 
-                <span>Loading..</span>
-                }
-                else
-                {
-                    <span>+ Create</span>
-                }
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-create dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
 
+                <i class="bi bi-box-arrow-up-right"></i> Export (@checkedEmployees.Count)
             </button>
 
+            <ul class="dropdown-menu">
+
+                <li>
+                    <button class="dropdown-item" @onclick="ExportPdf"
+                            disabled="@(checkedEmployees.Count == 0)">
+                        <i class="bi bi-file-earmark-pdf text-danger me-1"></i> Export PDF
+                    </button>
+                </li>
+
+                <li>
+                    <button class="dropdown-item" @onclick="ExportExcel"
+                            disabled="@(checkedEmployees.Count == 0)">
+                        <i class="bi bi-file-earmark-excel text-success me-1"></i> Export Excel
+                    </button>
+                </li>
+
+            </ul>
+        </div>
+        <button class="btn-create" @onclick="OpenModalAsync" disabled="@isLoading">
+
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                <span>Loading..</span>
+            }
+            else
+            {
+                <span>+ Create</span>
+            }
+
+        </button>
+        <button class="btn btn-create " style="color:white ;background:#43536a;" @onclick="Reset">
+            <i class="bi bi-arrow-clockwise"></i> Reset
+        </button>
     </div>
 
 </div>
-<div class="filter-bar">
+@* <div class="filter-bar">
 
-    <select class="form-select filter-select">
-        <option value="">Department</option>
-        <option>IT</option>
-        <option>HR</option>
-        <option>Finance</option>
-    </select>
-
-    <select class="form-select filter-select">
-        <option value="">Designation</option>
-        <option>Software Developer</option>
-        <option>HR Manager</option>
-    </select>
+   
 
     <select class="form-select filter-select">
         <option value="">Status</option>
@@ -214,11 +228,9 @@
 
     <input type="date" class="form-control filter-date">
 
-    <button class="btn btn-light filter-reset">
-        <i class="bi bi-arrow-clockwise"></i> Reset
-    </button>
+    
 
-</div>
+</div> *@
 @if (employees == null)
 {
     <p><em>Loading...</em></p>
@@ -230,11 +242,14 @@ else
 
             <thead class="table-light">
                 <tr>
+                    <th>
+                        <input type="checkbox" @onchange="CheckAllEmployees" />
+                    </th>
                     <th style="width:60px"></th>
                     <th>EmpCode</th>
                     <th>Name</th>
                     <th>Email</th>
-                    <th>Mobile</th>
+                    <th>Mobile Number</th>
                     <th>Hire Date</th>
                     <th>Department</th>
                     <th>Designation</th>
@@ -248,7 +263,11 @@ else
                 @foreach (var emp in employees)
                 {
                     <tr>
-
+                        <td>
+                            <input type="checkbox"
+                                   checked="@checkedEmployees.Contains(emp.Id)"
+                                   @onchange="(e) => CheckEmployee(emp.Id, e)" />
+                        </td>
                         <td>
                             <img src="@(string.IsNullOrEmpty(emp.Image) ? "/default/avtar.png" : emp.Image)"
                                  class="emp-avatar" />
@@ -294,7 +313,7 @@ else
                                 <button class="btn btn-icon delete-btn"
                                         title="Delete"
                                         style="border-radius: 0px 6px 6px 0px;"
-                                        @onclick="() => DeleteEmployee(emp.Id)">
+                                        @onclick="() => ConfirmDelte(emp.Id)">
                                     <i class="bi bi-trash"></i>
                                 </button>
 
@@ -308,7 +327,7 @@ else
             </tbody>
             <tfoot class="table-light table-footer">
                 <tr>
-                    <td colspan="10">
+                    <td colspan="11">
                         <div class="d-flex justify-content-end table-pagination">
 
                             <span class="page-nav"
@@ -342,20 +361,31 @@ else
 <CreateEditEmployee Employee="selectedEmployee"Departments="departments"Designations="designations" Show="show"
                     OnClose="CloseModal"
                     OnSaved="HandleSaved" />
-
+         
+<MessagePopup Show="@showMessage" Message="@messageText" IsConfirm="@isConfirmDelete" OnClose="CloseMessage" OnConfirm="DeleteEmployee" />
 
 @code {
     private bool show;
     private bool isLoading;
-    private List<EmployeeDto> employees = new();
-    private EmployeeDto selectedEmployee = new();
-    private string searchText = "";
-    private CancellationTokenSource cts { get; set; } = new();
+    private bool showMessage;
+    private bool isConfirmDelete;
+    private int deleteEmployeeId;
+    private int? selectedDepartmentId;
+    private int? selectedDesignationId;
+
     private int pageNumber = 1;
     private int pageSize = 10;
     private int totalCount;
+
+    private string messageText = "";
+    private string searchText = "";
+
+    private List<EmployeeDto> employees = new();
+    private EmployeeDto selectedEmployee = new();
+    private CancellationTokenSource cts { get; set; } = new();
     private List<DepartmentDto> departments = new();
     private List<DesignationDto> designations = new();
+    private HashSet<int> checkedEmployees = new();
 
 
 
@@ -372,7 +402,7 @@ else
 
     private async Task LoadEmployees()
     {
-        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize,searchText);
+        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize,searchText,selectedDepartmentId,selectedDesignationId);
 
         employees = result.Items;
         totalCount = result.TotalCount;
@@ -394,12 +424,27 @@ else
 
         await LoadEmployees();
     }
-    private async Task DeleteEmployee(int id)
+    private void ConfirmDelte(int id)
     {
-       
-            await EmployeeService.DeleteEmployeeAsync(id);
+        deleteEmployeeId = id;
+        messageText = "Are you sure you want to delete this employee?";
+        isConfirmDelete = true;
+        showMessage = true;
+    }
+    private async Task DeleteEmployee()
+    {
+        try
+        {
+            await EmployeeService.DeleteEmployeeAsync(deleteEmployeeId);
+            showMessage = false;
             await LoadEmployees();
-        
+        }
+        catch (Exception e)
+        {
+            messageText = e.Message;
+            showMessage = true;
+            isConfirmDelete = false;
+        }
     }
     private async Task Search(ChangeEventArgs e)
     {
@@ -417,6 +462,20 @@ else
         catch (TaskCanceledException)
         {
         }
+    }
+    private async Task ApplyFilter( )
+    {
+        pageNumber = 1;
+        await LoadEmployees();
+    }
+    private async Task Reset()
+    {
+        selectedDepartmentId = null;
+        selectedDesignationId =null;
+        searchText = "";
+        pageNumber = 1;
+        await LoadEmployees();
+
     }
     private async Task OpenModalAsync()
     {
@@ -438,6 +497,10 @@ else
     {
         show = false;
     }
+    private void CloseMessage()
+    {
+        showMessage = false;
+    }
 
     private async Task NextPage()
     {
@@ -454,5 +517,38 @@ else
     {
         pageNumber = page;
         await LoadEmployees();
+    }
+    private async Task CheckEmployee(int id ,ChangeEventArgs e)
+    {
+        bool isChecked = (bool)e.Value;
+        if (isChecked)
+            checkedEmployees.Add(id);
+        else
+            checkedEmployees.Remove(id);
+
+    }
+    private void CheckAllEmployees(ChangeEventArgs e)
+    {
+        bool isChecked = (bool)e.Value;
+
+        if (isChecked)
+        {
+            foreach (var emp in employees)
+                checkedEmployees.Add(emp.Id);
+        }
+        else
+        {
+            foreach (var emp in employees)
+                checkedEmployees.Remove(emp.Id);
+        }
+    }
+    private void ExportPdf()
+    {
+        Console.WriteLine("Export PDF clicked");
+    }
+
+    private void ExportExcel()
+    {
+        Console.WriteLine("Export Excel clicked");
     }
 }

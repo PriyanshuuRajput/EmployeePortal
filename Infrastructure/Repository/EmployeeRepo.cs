@@ -15,7 +15,7 @@ namespace Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search)
+        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search,int? selectedDepartment,int? selectedDesignation)
         {
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
@@ -35,6 +35,17 @@ namespace Infrastructure.Repository
                         e.LastName.Contains(search) ||
                         e.Email.Contains(search) ||
                         e.EmpCode.Contains(search));
+                }
+                if (selectedDepartment.HasValue)
+                {
+                    query = query.Where(e =>
+                        e.Designation.DepartmentId == selectedDepartment.Value);
+                }
+
+                if (selectedDesignation.HasValue)
+                {
+                    query = query.Where(e =>
+                        e.DesignationId == selectedDesignation.Value);
                 }
                 totalCount = await query.CountAsync();
 

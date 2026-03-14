@@ -42,8 +42,8 @@
     .info-card {
         background: white;
         border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 12px;
+        padding: 10px;
+        margin-bottom: 10px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
 
@@ -111,7 +111,7 @@
 
                                     <img src="@(string.IsNullOrEmpty(Employee.Image) ? "/default/avtar.png" : Employee.Image)"
                                          class="rounded-circle"
-                                         style="width:120px;height:120px;object-fit:cover;border:1px solid #f59e0b;" />
+                                         style="width:100px;height:100px;object-fit:cover;border:1px solid #f59e0b;" />
 
                                     <InputFile id="avatarUpload"
                                                OnChange="ImageUpload"
@@ -161,13 +161,13 @@
 
                                 <div class="info-card text-start">
                                     <h6 class="fw-bold">Employee Department</h6>
-                                    <p>@(string.IsNullOrWhiteSpace(NewDepartmentName)? (Employee.Department?.Name ?? "None"): NewDepartmentName)
+                                    <p>@(Employee.Department?.Name ?? "None")
                                     </p>
                                 </div>
 
                                 <div class="info-card text-start">
                                     <h6 class="fw-bold">Employee Designation</h6>
-                                    <p>@(string.IsNullOrWhiteSpace(NewDesignationName)? (Employee.Designation?.Name ?? "None"): NewDesignationName)
+                                    <p>@(Employee.Designation?.Name ?? "None")
                                     </p>
                                 </div>
                             </div>
@@ -190,8 +190,8 @@
                                             <option value="Dr">Dr</option>
                                             </InputSelect>
                                             <i class="bi bi-chevron-down dropdown-icon"></i>
-                                        <ValidationMessage For=@(() => Employee.Title) />
                                         </div>
+                                        <ValidationMessage For=@(() => Employee.Title) />  
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -262,36 +262,33 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Department <span class="text-danger">*</span></label>
+                                        <div class="position-relative">
+                                        <InputSelect class="form-control" @bind-Value="Employee.DepartmentId">
+                                            <option value=""></option>
 
-                                        <div class="combo-box">
-
-                                            <InputText class="form-control"
-                                                       @bind-Value="NewDepartmentName"
-                                                       @onfocus="ShowDropdown" 
-                                                       @onblur="()=>showDepartment= false"/>
-
-                                            <span class="dropdown-icon" @onclick="Toggle1">
-                                                <i class="bi bi-chevron-down"></i>
-                                            </span>
-                                            @if (showDepartment)
+                                            @foreach (var dept in Departments)
                                             {
-                                                <div class="combo-dropdown">
-                                                    @foreach (var d in FilterDepartment)
-                                                    {
-                                                        <div class="combo-item"
-                                                             @onclick="() => Select(d)">
-                                                            @d.Name
-                                                        </div>
-                                                    }
-                                                </div>
+                                                <option value="@dept.Id">@dept.Name</option>
                                             }
+                                        </InputSelect>
+                                        <i class="bi bi-chevron-down dropdown-icon"></i>
                                         </div>
                                         <ValidationMessage For=@(() => Employee.DepartmentId) />
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Designation <span class="text-danger">*</span></label>
+                                        <div class="position-relative">
+                                        <InputSelect class="form-control" @bind-Value="Employee.DesignationId">
+                                            <option value=""></option>
 
-                                        <div class="combo-box">
+                                            @foreach (var des in Designations)
+                                            {
+                                                <option value="@des.Id">@des.Name</option>
+                                            }
+                                        </InputSelect>
+                                        <i class="bi bi-chevron-down dropdown-icon"></i>
+                                        </div>
+                                        @* <div class="combo-box">
 
                                             <InputText class="form-control"
                                                        @bind-Value="NewDesignationName"
@@ -313,14 +310,14 @@
                                                     }
                                                 </div>
                                             }
-                                        </div>
+                                        </div> *@
                                         <ValidationMessage For=@(() => Employee.DesignationId) />
                                     </div>
                                     
 
                                     <div class="col-12">
                                         <label class="form-label">Address <span class="text-danger">*</span></label>
-                                        <InputTextArea class="form-control" maxlength="250" rows="3" @bind-Value="Employee.Address" />
+                                        <InputTextArea class="form-control" maxlength="250" rows="2" @bind-Value="Employee.Address" />
                                         <ValidationMessage For=@(() => Employee.Address) />
                                     </div>
 
@@ -369,8 +366,7 @@
 @code {
     private bool showMessage = false;
     private bool isSave;
-    private bool showDepartment;
-    private bool showDesignation;
+
     [Parameter]
     public EmployeeDto Employee { get; set; } = new();
 
@@ -388,18 +384,18 @@
     [Parameter]
     public List<DesignationDto> Designations { get; set; } = new();
 
-    private string? NewDepartmentName;
-    private string? NewDesignationName;
+    // private string? NewDepartmentName;
+    // private string? NewDesignationName;
     private string messageText = "";
 
 
     // DepartmentDto and Designation Sugeestion/ Filter Dropdown
 
-    private IEnumerable<DesignationDto> FilterDesignation => string.IsNullOrWhiteSpace(NewDesignationName) ? Designations :
-            Designations.Where(x => x.Name.Contains(NewDesignationName, StringComparison.OrdinalIgnoreCase));
+    // private IEnumerable<DesignationDto> FilterDesignation => string.IsNullOrWhiteSpace(NewDesignationName) ? Designations :
+    //         Designations.Where(x => x.Name.Contains(NewDesignationName, StringComparison.OrdinalIgnoreCase));
 
-    private IEnumerable<DepartmentDto> FilterDepartment => string.IsNullOrWhiteSpace(NewDepartmentName) ? Departments :
-                Departments.Where(x => x.Name.Contains(NewDepartmentName, StringComparison.OrdinalIgnoreCase));
+    // private IEnumerable<DepartmentDto> FilterDepartment => string.IsNullOrWhiteSpace(NewDepartmentName) ? Departments :
+    //             Departments.Where(x => x.Name.Contains(NewDepartmentName, StringComparison.OrdinalIgnoreCase));
 
 
 
@@ -464,35 +460,6 @@
 //         Employee.Gender = "Female";
 // }
 
-    private void Toggle1()
-    {
-        showDepartment = !showDepartment;
-    }
-    private void Toggle2()
-    {
-        showDesignation = !showDesignation;
-    }
-    private void ShowDropdown()
-    {
-        showDepartment = true;
-    }
-    private void ShowDropdown2()
-    {
-        showDesignation = true;
-    }
-
-    private void Select(DepartmentDto dept)
-    {
-        NewDepartmentName = dept.Name;
-        Employee.DepartmentId = dept.Id;
-        showDepartment = false;
-    }
-    private void Select2(DesignationDto dept)
-    {
-        NewDesignationName = dept.Name;
-        Employee.DesignationId = dept.Id;
-        showDesignation = false;
-    }
 
     private async Task Close()
     {

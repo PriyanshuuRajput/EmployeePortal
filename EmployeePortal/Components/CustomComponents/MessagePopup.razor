@@ -8,7 +8,8 @@
         border-color: #f59e0b !important;
         color:white;
     }
-</style>@if (Show)
+</style>
+@if (Show)
 {
     <div class="modal fade show d-block" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -23,8 +24,18 @@
                     <h5 class="text-muted">@Message</h5>
                 </div>
 
-                <div class="modal-footer">
-                    <button class="btn button" @onclick="Close">Close</button>
+                    <div class="modal-footer">
+
+                        @if (IsConfirm)
+                        {
+                           
+                            <button class="btn button" @onclick="Close">Keep</button>
+                        <button class="btn btn-danger" style="padding: 6px 18.3px;" @onclick="Confirm">Yes</button>
+                        }
+                        else
+                        {
+                            <button class="btn button" @onclick="Close">OK</button>
+                        }
                 </div>
 
             </div>
@@ -39,6 +50,16 @@
     [Parameter] public string Title { get; set; } = "Message";
     [Parameter] public string Message { get; set; } = "";
     [Parameter] public EventCallback OnClose { get; set; }
+
+    [Parameter] public bool IsConfirm { get; set; }
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+
+    private async Task Confirm()
+    {
+        await OnConfirm.InvokeAsync();
+    }
 
     private async Task Close()
     {
