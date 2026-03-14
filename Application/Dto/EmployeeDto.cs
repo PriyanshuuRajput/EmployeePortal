@@ -22,6 +22,8 @@ namespace Application.Dto
                     Gender = "Male";
                 else if (_title == "Miss" || _title == "Mrs")
                     Gender = "Female";
+                else
+                    Gender = "";
             }
         }
 
@@ -40,7 +42,7 @@ namespace Application.Dto
         [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Enter a valid number")]
 
         public string? AlternatePhoneNumber { get; set; }
-        [Required(ErrorMessage = "Select gender.")]
+        //[Required(ErrorMessage = "Select gender.")]
         public string Gender { get; set; } = "";
         [Required(ErrorMessage = "Select date of birth.")]
         public DateTime? DateOfBirth { get; set; }
@@ -49,11 +51,11 @@ namespace Application.Dto
         [Required(ErrorMessage = "Select date.")]
         public DateTime? HireDate { get; set; }
         [Required(ErrorMessage = "Designation is required.")]
-        public int DesignationId { get; set; }
+        public int? DesignationId { get; set; }
 
         public DesignationDto? Designation { get; set; }
-         [Required(ErrorMessage="Department is required.")]
-        public int DepartmentId { get; set;  }
+        [Required(ErrorMessage="Department is required.")]
+        public int? DepartmentId { get; set;  }
         public DepartmentDto? Department { get; set; }
         public decimal Salary { get; set; }
         [Required(ErrorMessage = "Address is required.")]
