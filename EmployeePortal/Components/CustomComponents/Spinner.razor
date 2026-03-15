@@ -1,0 +1,70 @@
+﻿@rendermode InteractiveServer
+@implements IDisposable
+@inject SpinnerService SpinnerService
+<style>
+    .spinner-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        /* background: rgba(255,255,255,0.35); */
+        background: rgba(0,0,0,0.08);
+        backdrop-filter: blur(1px);
+        /* -webkit-backdrop-filter: blur(2px);
+        transition: opacity .2s ease; */
+    }
+
+    .loader {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 6px dotted #f59e0b;
+        border-right-color: #43536a;
+        border-bottom-color: #43536a;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+@if (isVisible)
+{
+    <div class="spinner-overlay">
+        <div class="loader">
+        </div>
+    </div>
+}
+
+@code {
+
+    private bool isVisible;
+
+    protected override void OnInitialized()
+    {
+        SpinnerService.OnShow += ShowSpinner;
+        SpinnerService.OnHide += HideSpinner;
+    }
+
+    private void ShowSpinner()
+    {
+        isVisible = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HideSpinner()
+    {
+        isVisible = false;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SpinnerService.OnShow -= ShowSpinner;
+        SpinnerService.OnHide -= HideSpinner;
+    }
+}

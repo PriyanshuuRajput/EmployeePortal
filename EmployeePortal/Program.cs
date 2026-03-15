@@ -19,7 +19,9 @@ builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IImageUploadService, ImageUploadService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService,DesignationService>();
+
 builder.Services.AddScoped<ExportService>();
+builder.Services.AddScoped<SpinnerService>();
 
 //Add Repositories
 builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();

@@ -4,6 +4,7 @@
 @inject IDepartmentService DepartmentService
 @inject IDesignationService DesignationService
 @inject ExportService ExportService
+@inject SpinnerService spinnerService
 @inject IJSRuntime JS
 @rendermode InteractiveServer
 
@@ -226,17 +227,18 @@
 
 @if (employees == null)
 {
-    <p><em>Loading...</em></p>
+    <div class="d-flex flex-column align-items-center justify-content-center py-5">
+    </div>
 }
 else
 {
-<div class="table-container">
-<table class="table employee-table table-hover align-middle mb-0">
+    <div class="table-container">
+        <table class="table employee-table table-hover align-middle mb-0">
 
             <thead class="table-light">
                 <tr>
                     <th>
-                        <input style="accent-color: #43536a" ; type="checkbox" @onchange="CheckAllEmployees" />
+                        <input style="accent-color: #43536a" ; type="checkbox" checked="@isAllChecked" @onchange="CheckAllEmployees" />
                     </th>
                     <th style="width:60px"></th>
                     <th>EmpCode</th>
@@ -258,13 +260,13 @@ else
                     <tr>
                         <td>
                             <input type="checkbox"
-                                   style="accent-color: #43536a" ;
-                                   checked="@checkedEmployees.Contains(emp.Id)"
-                                   @onchange="(e) => CheckEmployee(emp.Id, e)" />
+                            style="accent-color: #43536a" ;
+                            checked="@checkedEmployees.Contains(emp.Id)"
+                            @onchange="(e) => CheckEmployee(emp.Id, e)" />
                         </td>
                         <td>
                             <img src="@(string.IsNullOrEmpty(emp.Image) ? "/default/avtar.png" : emp.Image)"
-                                 class="emp-avatar" />
+                            class="emp-avatar" />
                         </td>
                         <td class="ellipsis" title="@emp.EmpCode">
                             @emp.EmpCode
@@ -284,40 +286,39 @@ else
                             } *@
                         </td>
 
-                        <td class="ellipsis" title="@emp.HireDate">@emp.HireDate?.ToString("dd MMM yyyy")</td>
+                        <td class="ellipsis" title="@emp.HireDate?.ToString("dd MMM yyyy")">@emp.HireDate?.ToString("dd MMM yyyy")</td>
 
-                        <td class="ellipsis" title="@emp.Department">@emp.Department?.Name</td>
+                        <td class="ellipsis" title="@emp.Department?.Name">@emp.Department?.Name</td>
 
-                        <td class="ellipsis" title="@emp.Designation">@emp.Designation?.Name</td>
+                        <td class="ellipsis" title="@emp.Designation?.Name">@emp.Designation?.Name</td>
 
                         <td class="ellipsis" title="@emp.Salary">₹ @emp.Salary.ToString("N0")</td>
 
                         <td class="text-end action-column">
-                                <div class="d-flex justify-content-end align-items-center gap-2">
-                                        <span class="badge @(emp.IsActive ? "active-badge" : "inactive-badge")">@(emp.IsActive ? "Active" : "Inactive")</span>
-                            <div class="action-buttons">
+                            <div class="d-flex justify-content-end align-items-center gap-2">
+                                <span class="badge @(emp.IsActive ? "active-badge" : "inactive-badge")">@(emp.IsActive ? "Active" : "Inactive")</span>
+                                <div class="action-buttons">
 
-                                <button class="btn btn-icon edit-btn"
-                                        title="Edit"
-                                        style="border-radius: 6px 0px 0px 6px;"
-                                        @onclick="() => EditEmployee(emp.Id)">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                                    <button class="btn btn-icon edit-btn"
+                                    title="Edit"
+                                    style="border-radius: 6px 0px 0px 6px;"
+                                    @onclick="() => EditEmployee(emp.Id)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
 
-                                <button class="btn btn-icon delete-btn"
-                                        title="Delete"
-                                        style="border-radius: 0px 6px 6px 0px;"
-                                        @onclick="() => ConfirmDelte(emp.Id)">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                    <button class="btn btn-icon delete-btn"
+                                    title="Delete"
+                                    style="border-radius: 0px 6px 6px 0px;"
+                                    @onclick="() => ConfirmDelte(emp.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
 
-                            </div>
+                                </div>
                             </div>
                         </td>
 
                     </tr>
                 }
-
             </tbody>
             <tfoot class="table-light table-footer">
                 <tr>
@@ -325,8 +326,8 @@ else
                         <div class="d-flex justify-content-end table-pagination">
 
                             <span class="page-nav"
-                                  @onclick="PreviousPage"
-                                  style="@(HasPrevious ? "" : "pointer-events:none;opacity:0.4")">
+                            @onclick="PreviousPage"
+                            style="@(HasPrevious ? "" : "pointer-events:none;opacity:0.4")">
                                 <i class="bi bi-chevron-left"></i>
                             </span>
 
@@ -334,14 +335,14 @@ else
                             {
                                 var index = i;
                                 <span class="page-number @(pageNumber == index ? "active-page" : "")"
-                                      @onclick="() => GoToPage(index)">
+                                @onclick="() => GoToPage(index)">
                                     @index
                                 </span>
                             }
 
                             <span class="page-nav"
-                                  @onclick="NextPage"
-                                  style="@(HasNext ? "" : "pointer-events:none;opacity:0.4")">
+                            @onclick="NextPage"
+                            style="@(HasNext ? "" : "pointer-events:none;opacity:0.4")">
                                 <i class="bi bi-chevron-right"></i>
                             </span>
 
@@ -350,7 +351,7 @@ else
                 </tr>
             </tfoot>
         </table>
-</div>        
+    </div>        
 }
 <CreateEditEmployee Employee="selectedEmployee"Departments="departments"Designations="designations" Show="show"
                     OnClose="CloseModal"
@@ -362,6 +363,7 @@ else
     private bool show;
     private bool isLoading;
     private bool showMessage;
+    private bool isAllChecked;
     private bool isConfirmDelete;
     private int deleteEmployeeId;
     private int? selectedDepartmentId;
@@ -374,7 +376,7 @@ else
     private string messageText = "";
     private string searchText = "";
 
-    private List<EmployeeDto> employees = new();
+    private List<EmployeeDto>? employees;
     private EmployeeDto selectedEmployee = new();
     private CancellationTokenSource cts { get; set; } = new();
     private List<DepartmentDto> departments = new();
@@ -387,20 +389,51 @@ else
 
     private bool HasNext => pageNumber * pageSize < totalCount;
 
-    protected override async Task OnInitializedAsync()
-    {
-        departments = await DepartmentService.GetAllAsync();
-        designations = await DesignationService.GetAllDesignationsAsync();
-        await LoadEmployees();
-    }
+    //     protected override async Task OnInitializedAsync()
+    //      {
+    //          await spinnerService.RunAsync(async () =>
+    // {
+    //     spinnerService.Show();
+    //     await Task.Delay(400);
+    //     departments = await DepartmentService.GetAllAsync();
+    //     designations = await DesignationService.GetAllDesignationsAsync();
+    //     await LoadEmployees();
 
+    //     spinnerService.Hide();
+    // });
+    //     }
+    private bool _initialized;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _initialized)
+            return;
+
+        _initialized = true;
+
+        await spinnerService.RunAsync(async () =>
+        {
+            await Task.Delay(500);
+            employees = null;
+
+            departments = await DepartmentService.GetAllAsync();
+            designations = await DesignationService.GetAllDesignationsAsync();
+
+            await LoadEmployees();
+        });
+
+        StateHasChanged();
+    }
     private async Task LoadEmployees()
     {
-        var result = await EmployeeService.GetAllEmployeesAsync(pageNumber, pageSize,searchText,selectedDepartmentId,selectedDesignationId);
+        spinnerService.Show();
+        await Task.Delay(200);
+        var result = await EmployeeService.GetAllEmployeesAsync(
+            pageNumber, pageSize, searchText, selectedDepartmentId, selectedDesignationId);
 
         employees = result.Items;
         totalCount = result.TotalCount;
-        StateHasChanged();
+        spinnerService.Hide();
     }
 
 
@@ -449,7 +482,7 @@ else
 
         try
         {
-            await Task.Delay(500, cts.Token);
+            await Task.Delay(400, cts.Token);
             pageNumber = 1;
             await LoadEmployees();
         }
@@ -468,6 +501,8 @@ else
         selectedDesignationId =null;
         searchText = "";
         pageNumber = 1;
+        checkedEmployees.Clear();
+        isAllChecked = false;
         await LoadEmployees();
 
     }
@@ -523,17 +558,16 @@ else
     }
     private void CheckAllEmployees(ChangeEventArgs e)
     {
-        bool isChecked = (bool)e.Value;
+        isAllChecked = (bool)e.Value;
 
-        if (isChecked)
+        if (isAllChecked)
         {
             foreach (var emp in employees)
                 checkedEmployees.Add(emp.Id);
         }
         else
         {
-            foreach (var emp in employees)
-                checkedEmployees.Remove(emp.Id);
+            checkedEmployees.Clear();
         }
     }
     private async Task ExportPdf()
