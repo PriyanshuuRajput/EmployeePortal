@@ -26,7 +26,9 @@ namespace Infrastructure.Repository
             try
             {
 
-                var query = _context.Employees.AsQueryable();
+                var query = _context.Employees
+                            .Where(e => !e.IsDeleted && e.IsActive)
+                            .AsQueryable();
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
@@ -52,7 +54,7 @@ namespace Infrastructure.Repository
                 employees = await query
                     .Include(e => e.Designation)
                     .ThenInclude(d=>d.Department)
-                    .OrderBy(e => e.Id)
+                    .OrderByDescending(e => e.Id)
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
@@ -77,7 +79,7 @@ namespace Infrastructure.Repository
                 var employee = await _context.Employees
                     .Include(e => e.Designation)
                     .ThenInclude(d => d.Department)
-                    .FirstOrDefaultAsync(e => e.Id == id);
+                    .FirstOrDefaultAsync(e => e.Id == id && !e.IsDeleted && e.IsActive);
 
                 return employee;
             }
@@ -91,8 +93,8 @@ namespace Infrastructure.Repository
         public async Task<Employee?> GetEmployeeByEmailAsync(string email)
         {
                 var e= await _context.Employees
-                    .FirstOrDefaultAsync(e => e.Email == email);
-                return e;
+                .FirstOrDefaultAsync(e => e.Email == email && !e.IsDeleted && e.IsActive);
+            return e;
         }
 
         public async Task AddEmployeeAsync(Employee employee)
@@ -149,7 +151,7 @@ namespace Infrastructure.Repository
                     employee.IsDeleted = true;
                     employee.IsActive = false;
 
-                    _context.Employees.Update(employee);
+                    //_context.Employees.Update(employee);
                     await _context.SaveChangesAsync();
                 }
             }
