@@ -22,6 +22,7 @@ builder.Services.AddScoped<IDesignationService,DesignationService>();
 
 builder.Services.AddScoped<ExportService>();
 builder.Services.AddScoped<SpinnerService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 //Add Repositories
 builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();

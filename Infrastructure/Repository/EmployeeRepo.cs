@@ -15,7 +15,7 @@ namespace Infrastructure.Repository
             _context = context;
         }
 
-        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search,int? selectedDepartment,int? selectedDesignation)
+        public async Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search,int? selectedDepartment,int? selectedDesignation,string sortColumn,string sortDirection)
         {
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
@@ -29,7 +29,7 @@ namespace Infrastructure.Repository
                 var query = _context.Employees
                             .Where(e => !e.IsDeleted && e.IsActive)
                             .AsQueryable();
-
+                //Searching
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     query = query.Where(e =>
@@ -38,6 +38,7 @@ namespace Infrastructure.Repository
                         e.Email.Contains(search) ||
                         e.EmpCode.Contains(search));
                 }
+                //Filters
                 if (selectedDepartment.HasValue)
                 {
                     query = query.Where(e =>
@@ -49,12 +50,39 @@ namespace Infrastructure.Repository
                     query = query.Where(e =>
                         e.DesignationId == selectedDesignation.Value);
                 }
+
+                // Sorting
+                sortColumn = sortColumn?.Trim().ToLower();
+                sortDirection = sortDirection?.Trim().ToLower();
+                switch (sortColumn)
+                {
+                    case "name":
+                        query = sortDirection == "asc"
+                            ? query.OrderBy(e => e.FirstName)
+                            : query.OrderByDescending(e => e.FirstName);
+                        break;
+
+                    case "department":
+                        query = sortDirection == "asc"
+                            ? query.OrderBy(e => e.Designation.Department.Name)
+                            : query.OrderByDescending(e => e.Designation.Department.Name);
+                        break;
+
+                    case "designation":
+                        query = sortDirection == "asc"
+                            ? query.OrderBy(e => e.Designation.Name)
+                            : query.OrderByDescending(e => e.Designation.Name);
+                        break;
+
+                    default:
+                        query = query.OrderByDescending(e => e.Id);
+                        break;
+                }
                 totalCount = await query.CountAsync();
 
                 employees = await query
                     .Include(e => e.Designation)
                     .ThenInclude(d=>d.Department)
-                    .OrderByDescending(e => e.Id)
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
@@ -101,6 +129,12 @@ namespace Infrastructure.Repository
         {
             try
             {
+                var minDob = DateTime.Today.AddYears(-60);
+                var maxDob = DateTime.Today.AddYears(-18);
+                if (employee.DateofBirth < minDob || employee.DateofBirth > maxDob)
+                {
+                    throw new Exception("Age must be between 18 and 60 years.");
+                }
                 await _context.Employees.AddAsync(employee);
                 await _context.SaveChangesAsync();
             }

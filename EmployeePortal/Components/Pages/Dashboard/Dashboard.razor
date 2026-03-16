@@ -1,0 +1,494 @@
+﻿@page "/"
+@using EmployeePortal.Components.Pages.Employee
+@inject IEmployeeService EmployeeService
+@inject IDepartmentService DepartmentService
+@inject IDesignationService DesignationService
+@inject IDashboardService DashboardService
+@inject SpinnerService spinnerService
+@rendermode InteractiveServer
+<style>
+    .page-number {
+        margin: 0 6px;
+        cursor: pointer;
+        color: #1f2a44;
+    }
+
+        .page-number:hover {
+            color: #f59e0b;
+        }
+
+    .active-page {
+        font-weight: 600;
+        color: #f59e0b;
+    }
+
+    .page-nav {
+        margin: 0 8px;
+        cursor: pointer;
+        color: #1f2a44;
+    }
+
+    .action-buttons {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .edit-btn {
+        background: #eef4ff;
+        color: #f59e0b;
+    }
+
+        .edit-btn:hover {
+            background: #dbe7ff;
+        }
+</style>
+<div class="top-header">
+    <div class="top-title">
+            <h3>Dashboard</h3>
+            <span class="text-muted fw-semibold">Welcome back, Sarah. Here's what's happening today.</span>
+        </div>
+
+        <div class="top-actions">
+        <div class="input-group" style="width:250px;">
+
+            <input type="text"
+                   class="form-control"
+                   placeholder="Search employees..."
+                   @bind="@searchText"
+                   @oninput="SearchText" />
+
+            <span class="input-group-text">
+                <i class="bi bi-search"></i>
+            </span>
+
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0" style="height:150px;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:45px;height:45px;font-size:20px;">
+                    👥
+                </div>
+                <div>
+                    <p class="mb-1 text-muted">Total Employees</p>
+                    <h4 class="mb-0 fw-bold">@dashboard.totalEmployee</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0" style="height:150px;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-success-subtle rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:45px;height:45px;font-size:20px;">
+                    ➕
+                </div>
+                <div>
+                    <p class="mb-1 text-muted">New Hires</p>
+                    <h4 class="mb-0 fw-bold">@dashboard.newHire</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0" style="height:150px;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:45px;height:45px;font-size:20px;">
+                    🏢
+                </div>
+                <div>
+                    <p class="mb-1 text-muted">Departments</p>
+                    <h4 class="mb-0 fw-bold">@dashboard.totalDepartment</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0" style="height:150px;">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-info-subtle rounded-circle d-flex align-items-center justify-content-center"
+                     style="width:45px;height:45px;font-size:20px;">
+                    ⏰
+                </div>
+                <div>
+                    <p class="mb-1 text-muted">Attendance Rate</p>
+                    <h4 class="mb-0 fw-bold">94.2%</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="row g-4 mt-3">
+
+    <!-- Recent Employees -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-muted">Recent Employees</h5>
+                <a href="employees" class="text-decoration-none " style="color:#f59e0b">View All</a>
+            </div>
+
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:60px"></th>
+                            <th>Name</th>
+                            <th>EmpCode</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Join Date</th>
+                            <th></th>
+                            @* <th>Status</th> *@
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @if (employees != null)
+                        {
+                            @foreach (var emp in employees
+                                                    .Where(e => e.HireDate != null && e.HireDate >= DateTime.Now.AddMonths(-1))
+                                                    .OrderByDescending(e => e.HireDate)
+                                                    .Take(5))
+                            {
+                                <tr>
+
+                                    <td>
+                                        <img src="@(string.IsNullOrEmpty(emp.Image) ? "/default/avtar.png" : emp.Image)"
+                                             class="emp-avatar" />
+                                    </td>
+
+                                    <td>
+                                        @emp.FirstName @emp.LastName
+                                    </td>
+
+                                    <td>
+                                        @emp.EmpCode
+                                    </td>
+
+                                    <td>
+                                        @emp.Department?.Name
+                                    </td>
+
+                                    <td>
+                                        @emp.Designation?.Name
+                                    </td>
+
+                                    <td>
+                                        @emp.HireDate?.ToString("dd MMM yyyy")
+                                    </td>
+                                    <td>
+                                    <div class="action-buttons">
+
+                                    <button class="btn btn-icon edit-btn"
+                                    title="Edit"
+                                    style="border-radius: 6px;"
+                                    @onclick="() => EditEmployee(emp.Id)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                    <tfoot class="table-light table-footer">
+                        <tr>
+                            <td colspan="11">
+                                <div class="d-flex justify-content-between table-pagination">
+                                    <div>
+                                        <span class="text-muted">
+                                            Showing @start–@end of @totalCount employees
+                                            (Page @pageNumber of @Math.Ceiling((double)totalCount / pageSize))
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="page-nav"
+                                              @onclick="PreviousPage"
+                                              style="@(HasPrevious ? "" : "pointer-events:none;opacity:0.4")">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </span>
+
+                                       @for (int i = 1; i <= Math.Min(10, Math.Ceiling((double)totalCount / pageSize)); i++)
+                                        {
+                                            var index = i;
+                                            <span class="page-number @(pageNumber == index ? "active-page" : "")"
+                                                  @onclick="() => GoToPage(index)">
+                                                @index
+                                            </span>
+                                        }
+
+                                        <span class="page-nav"
+                                              @onclick="NextPage"
+                                              style="@(HasNext ? "" : "pointer-events:none;opacity:0.4")">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tfoot>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm border-0 h-100" >
+
+            <div class="card-header bg-white">
+                <h5 class="mb-0 text-muted fw-semibold">Recent Activity</h5>
+            </div>
+
+            <div class="card-body">
+
+                @if (recentEmployees != null && recentEmployees.Any())
+                {
+                    @foreach (var emp in recentEmployees)
+                    {
+                        <div class="d-flex mt-3 mb-3">
+
+                            <span class="badge rounded-circle bg-success me-3"
+                                  style="width:10px;height:10px;"></span>
+
+                            <div>
+                                <strong>@emp.FirstName @emp.LastName</strong>
+                                joined as <span class="text-muted fw-semibold">@emp.Designation?.Name</span>
+
+                                <div class="text-muted small">
+                                    @TimeAgo(emp.HireDate.Value)
+                                </div>
+                            </div>
+
+                        </div>
+                    }
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="card shadow-sm border-0 mt-4">
+
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Departments Overview</h5>
+        <span class="text-muted fw-semibold me-2">Total Departments: @departments.Count</span>
+    </div>
+
+    <div class="card-body" style="max-height:400px; overflow-y:auto;">
+
+        <div class="row g-3">
+
+            @foreach (var dept in departmentOverview)
+            {
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="p-2">
+
+                        <div class="d-flex justify-content-between">
+                            <span class="text-truncate">@dept.Name</span>
+                            <strong class="text-muted fw-semibold">Total Employee: @dept.EmployeeCount</strong>
+                        </div>
+
+                        <div class="progress mt-2" style="height:8px;">
+                            <div class="progress-bar bg-warning"
+                                 style="width:@(dept.EmployeeCount * 100 / dashboard.totalEmployee)%">
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>
+
+<CreateEditEmployee Employee="selectedEmployee"Departments="departments"Designations="designations" Show="show"
+                    OnClose="CloseModal"
+                    OnSaved="HandleSaved" />
+@code {
+    private List<EmployeeDto>? employees;
+    private List<EmployeeDto> recentEmployees = new();
+    private EmployeeDto selectedEmployee = new();
+    private List<DepartmentDto> departments = new();
+    private List<DesignationDto> designations = new();
+    private List<DepartmentDto> departmentOverview = new();
+    private DashboardDto dashboard = new();
+    private CancellationTokenSource cts { get; set; } = new();
+
+    private int newHire;
+    private int totalDepartments;
+    private int? selectedDepartmentId;
+    private int? selectedDesignationId;
+    private int pageNumber = 1;
+    private int pageSize = 5;
+    private int totalCount;
+    private int start;
+    private int end;
+
+    private string searchText = "";
+    private string sortColumn = "";
+    private string sortDirection = "asc";
+
+    private bool show;
+    private bool HasPrevious => pageNumber > 1;
+    private bool HasNext => pageNumber < Math.Ceiling((double)totalCount / pageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            spinnerService.Show();
+            await Task.Delay(200);
+
+            dashboard = await DashboardService.GetDashboardAsync();
+            departmentOverview = await DashboardService.GetDepartmeOverViewAsync();
+            departments = await DepartmentService.GetAllAsync();
+            designations = await DesignationService.GetAllDesignationsAsync();
+
+            await LoadEmployees();
+
+            recentEmployees = employees?
+                .Where(e => e.HireDate != null)
+                .OrderByDescending(e => e.HireDate)
+                .Take(5)
+                .ToList() ?? new List<EmployeeDto>();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+        finally
+        {
+            spinnerService.Hide();
+        }
+    }
+    private async Task LoadEmployees()
+    {
+        spinnerService.Show();
+
+        try
+        {
+            var result = await EmployeeService.GetAllEmployeesAsync(pageNumber,pageSize,searchText,selectedDepartmentId,selectedDesignationId,sortColumn,sortDirection);
+
+            employees = result.Items;
+            totalCount = result.TotalCount;
+
+            start = (pageNumber - 1) * pageSize + 1;
+            end = Math.Min(pageNumber * pageSize, totalCount);
+        }
+        finally
+        {
+            spinnerService.Hide();
+        }
+    }
+    private async Task SearchText(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? "";
+
+        cts.Cancel();
+        cts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(400, cts.Token);
+
+            pageNumber = 1;
+
+            await LoadEmployees();
+
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+    private async Task EditEmployee(int id)
+    {
+        var emp = await EmployeeService.GetEmployeeByIdAsync(id);
+
+        if (emp != null)
+            selectedEmployee = emp;
+        show = true;
+    }
+    private async Task HandleSaved()
+    {
+        show = false;
+
+        await LoadEmployees();
+    }
+    private void CloseModal()
+    {
+        show = false;
+    }
+    private string TimeAgo(DateTime date)
+    {
+        var span = DateTime.Now - date;
+
+        if (span.TotalDays >= 1)
+            return $"{(int)span.TotalDays} days ago";
+
+        if (span.TotalHours >= 1)
+            return $"{(int)span.TotalHours} hours ago";
+
+        if (span.TotalMinutes >= 1)
+            return $"{(int)span.TotalMinutes} minutes ago";
+
+        return "just now";
+    }
+    private async Task NextPage()
+    {
+        if (HasNext)
+        {
+            pageNumber++;
+            await LoadEmployees();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (HasPrevious)
+        {
+            pageNumber--;
+            await LoadEmployees();
+        }
+    }
+    private async Task GoToPage(int page)
+    {
+        pageNumber = page;
+        await LoadEmployees();
+    }
+}

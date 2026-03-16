@@ -252,11 +252,12 @@
                                    
                                     <div class="col-md-6">
                                         <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                                        <InputDate class="form-control" @bind-Value="Employee.DateOfBirth" />
+                                        <InputDate class="form-control" @bind-Value="Employee.DateOfBirth" min="@minDob.ToString("yyyy-MM-dd")"
+                                                   max="@maxDob.ToString("yyyy-MM-dd")" />
                                         <ValidationMessage For=@(() => Employee.DateOfBirth) />
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Hire Date <span class="text-danger">*</span></label>
+                                        <label class="form-label">Join Date <span class="text-danger">*</span></label>
                                         <InputDate class="form-control" @bind-Value="Employee.HireDate" />
                                         <ValidationMessage For=@(() => Employee.HireDate) />
                                     </div>
@@ -388,6 +389,8 @@
     // private string? NewDesignationName;
     private string messageText = "";
 
+    private DateTime maxDob = DateTime.Today.AddYears(-18);
+    private DateTime minDob = DateTime.Today.AddYears(-60);
 
     // DepartmentDto and Designation Sugeestion/ Filter Dropdown
 
