@@ -6,7 +6,7 @@ namespace Application.Interfaces.IService
 {
     public interface IEmployeeService
     {
-        public Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search , int? selectedDepartment, int? selectedDesignation);
+        public Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search , int? selectedDepartment, int? selectedDesignation,string sortColumn, string sortDirection);
 
         public Task<EmployeeDto?> GetEmployeeByIdAsync(int id);
 

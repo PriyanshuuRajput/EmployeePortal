@@ -44,11 +44,11 @@ namespace Application.Dto
         public string? AlternatePhoneNumber { get; set; }
         //[Required(ErrorMessage = "Select gender.")]
         public string Gender { get; set; } = "";
-        [Required(ErrorMessage = "Select date of birth.")]
+        [Required(ErrorMessage = "Date of birth is required.")]
         public DateTime? DateOfBirth { get; set; }
 
         public string? Image { get; set; }
-        [Required(ErrorMessage = "Select date.")]
+        [Required(ErrorMessage = "Join date is required.")]
         public DateTime? HireDate { get; set; }
         [Required(ErrorMessage = "Designation is required.")]
         public int? DesignationId { get; set; }

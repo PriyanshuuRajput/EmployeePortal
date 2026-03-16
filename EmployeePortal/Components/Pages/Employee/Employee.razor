@@ -21,7 +21,8 @@
         background: white;
     }
     .employee-table {
-        min-width: 1200px;
+        width: 100%;
+        table-layout: fixed;
     }
 
         .employee-table th,
@@ -37,14 +38,6 @@
 
     .employee-table tbody td {
         padding: 4px 8px;
-    }
-
-    .emp-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: 1px solid #f1f5f9;
-        object-fit: cover;
     }
 
     .ellipsis {
@@ -95,7 +88,7 @@
             background: #ffe4e6;
         }
 
-    .badge {
+    /* .badge {
         font-size: 12px;
         padding: 6px 8px;
         border-radius: 6px;
@@ -109,9 +102,9 @@
 
     .inactive-badge {
         background: #fee2e2;
-        /* color: #dc2626; */
+        color: #dc2626;
         color:black;
-    }
+    } */
 
     .page-number {
         margin: 0 6px;
@@ -152,7 +145,7 @@
     </div>
 
     <div class="top-actions">
-        <select class="form-select filter-select" @bind="selectedDepartmentId" @bind:after="ApplyFilter">>
+        <select class="form-select filter-select" @bind="selectedDepartmentId" @bind:after="ApplyFilter">
            <option value="" disabled selected>Department</option>
            @foreach (var dept in departments)
             {
@@ -220,7 +213,7 @@
 
         </button>
         <button class="btn btn-create " style="color:white ;background:#43536a;" @onclick="Reset">
-            <i class="bi bi-arrow-clockwise"></i> Reset
+            <i class="bi bi-arrow-clockwise"></i> Refresh
         </button>
     </div>
 </div>
@@ -237,18 +230,27 @@ else
 
             <thead class="table-light">
                 <tr>
-                    <th>
+                    <th style="width:30px">
                         <input style="accent-color: #43536a" ; type="checkbox" checked="@isAllChecked" @onchange="CheckAllEmployees" />
                     </th>
                     <th style="width:60px"></th>
-                    <th>EmpCode</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Mobile Number</th>
-                    <th>Hire Date</th>
-                    <th>Department</th>
-                    <th>Designation</th>
-                    <th>Salary</th>
+                    <th class="ellipsis" title="EmpCode">EmpCode</th>
+                    <th class="ellipsis" title="Name" @onclick='() => Sort("name")' style="cursor:pointer">
+                        Name
+                    <i class="bi @(sortColumn == "name" ? (sortDirection == "asc" ? "bi-arrow-up" : "bi-arrow-down") : "bi-arrow-down-up") ms-2"></i>
+                    </th>
+                    <th style="width:140px" class="ellipsis" title="Email">Email</th>
+                    <th class="ellipsis" title="Mobile Number">Mobile Number</th>
+                    <th class="ellipsis" title="Join Date">Join Date</th>
+                    <th class="ellipsis" title="Department" @onclick='() => Sort("department")' style="cursor:pointer;    width: 140px;">
+                        Department
+                        <i class="bi @(sortColumn == "designation" ? (sortDirection == "asc" ? "bi-arrow-up" : "bi-arrow-down") : "bi-arrow-down-up") ms-2"></i>
+                    </th>
+                    <th class="ellipsis" title="Designation" @onclick='() => Sort("designation")' style="cursor:pointer;    width: 140px;">
+                        Designation
+                    <i class="bi @(sortColumn == "department" ? (sortDirection == "asc" ? "bi-arrow-up" : "bi-arrow-down") : "bi-arrow-down-up") ms-2"></i>
+                    </th>
+                    <th class="ellipsis" title="Salary">Salary</th>
                     <th class="text-end action-column">Actions</th>
                 </tr>
             </thead>
@@ -323,8 +325,14 @@ else
             <tfoot class="table-light table-footer">
                 <tr>
                     <td colspan="11">
-                        <div class="d-flex justify-content-end table-pagination">
-
+                        <div class="d-flex justify-content-between table-pagination">
+                            <div>
+                            <span class="text-muted">
+                                Showing @start–@end of @totalCount employees
+                                (Page @pageNumber of @totalCount)
+                            </span>
+                            </div>
+                            <div>
                             <span class="page-nav"
                             @onclick="PreviousPage"
                             style="@(HasPrevious ? "" : "pointer-events:none;opacity:0.4")">
@@ -345,7 +353,7 @@ else
                             style="@(HasNext ? "" : "pointer-events:none;opacity:0.4")">
                                 <i class="bi bi-chevron-right"></i>
                             </span>
-
+                            </div>
                         </div>
                     </td>
                 </tr>
@@ -372,9 +380,14 @@ else
     private int pageNumber = 1;
     private int pageSize = 10;
     private int totalCount;
+    private int start;
+    private int end;
 
     private string messageText = "";
     private string searchText = "";
+    private string sortColumn = "";
+    private string sortDirection = "asc";
+
 
     private List<EmployeeDto>? employees;
     private EmployeeDto selectedEmployee = new();
@@ -421,22 +434,47 @@ else
 
             await LoadEmployees();
         });
-
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
     private async Task LoadEmployees()
     {
         spinnerService.Show();
         await Task.Delay(200);
-        var result = await EmployeeService.GetAllEmployeesAsync(
-            pageNumber, pageSize, searchText, selectedDepartmentId, selectedDesignationId);
+        try
+        {
+            var result = await EmployeeService.GetAllEmployeesAsync(
+                pageNumber, pageSize, searchText, selectedDepartmentId, selectedDesignationId, sortColumn, sortDirection);
 
-        employees = result.Items;
-        totalCount = result.TotalCount;
-        spinnerService.Hide();
+            employees = result.Items;
+            totalCount = result.TotalCount;
+            start = (pageNumber - 1) * pageSize + 1;
+            end = Math.Min(pageNumber * pageSize, totalCount);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message);
+        }
+        finally
+        {
+            spinnerService.Hide();
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
+    private async Task Sort(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortDirection = sortDirection == "asc" ? "desc" : "asc";
+        }
+        else
+        {
+            sortColumn = column;
+            sortDirection = "asc";
+        }
 
+        await LoadEmployees();
+    }
     private async Task EditEmployee(int id)
     {
         var emp = await EmployeeService.GetEmployeeByIdAsync(id);
@@ -501,6 +539,8 @@ else
         selectedDesignationId =null;
         searchText = "";
         pageNumber = 1;
+        sortColumn = "";
+        sortDirection = "desc";
         checkedEmployees.Clear();
         isAllChecked = false;
         await LoadEmployees();

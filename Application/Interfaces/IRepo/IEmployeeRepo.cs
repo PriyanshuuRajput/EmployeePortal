@@ -6,7 +6,7 @@ namespace Application.Interfaces.IRepo
 {
     public interface IEmployeeRepo
     {
-        Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search,int? selectedDepartment,int? selectedDesignation);
+        Task<PagedResult<Employee>> GetAllEmployeesAsync(int pageNumber, int pageSize, string search,int? selectedDepartment,int? selectedDesignation,string sortColumn, string sortDirection);
 
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task <Employee?> GetEmployeeByEmailAsync(string name);

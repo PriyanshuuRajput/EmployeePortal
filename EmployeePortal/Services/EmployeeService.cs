@@ -20,11 +20,11 @@ namespace EmployeePortal.Services
             _designationRepo = designationRepo;
         }
 
-        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search,int? selectedDepartment,int? selectedDesignation)
+        public async Task<PagedResult<EmployeeDto>> GetAllEmployeesAsync(int pageNumber, int pageSize,string search,int? selectedDepartment,int? selectedDesignation,string sortColumn,string sortDirection)
         {
             try
             {
-                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize,search,selectedDepartment, selectedDesignation);
+                var emp = await _employeeRepo.GetAllEmployeesAsync(pageNumber, pageSize,search,selectedDepartment, selectedDesignation, sortColumn, sortDirection);
 
                 var result = emp.Items.Select(e => new EmployeeDto
                 {
