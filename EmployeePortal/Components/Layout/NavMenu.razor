@@ -1,4 +1,9 @@
-﻿<div class="navbar navbar-dark px-0 w-100"
+﻿@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<div class="d-flex flex-column h-100">
+<div class="navbar navbar-dark px-0 w-100"
      style="border-radius:0 0 6px 6px; background:#ffffff; border:1px solid #1e293b; overflow:hidden;">
     <div class="d-flex align-items-center gap-2 px-3">
         <img src="/default/logo.png" alt="logo" style="height: 40px;width: 40px;object-fit: cover;">
@@ -17,7 +22,7 @@
         <div class="menu-title px-2 mt-2">MAIN</div>
 
         <div class="nav-item px-0 mb-2">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="dashboard" Match="NavLinkMatch.All">
                 <span class="bi bi-dashboard-nav-menu"></span>
                 <span>Dashboard</span>
             </NavLink>
@@ -59,3 +64,25 @@
 
     </nav>
 </div>
+<div class="mt-auto p-2" style="margin-left:auto;">
+        <button class="btn w-100 " style="color:#f59e0b"
+                @onclick="Logout" @onclick:stopPropagation="true" @onclick:preventDefault="true">
+        <i class="bi bi-box-arrow-right me-2"></i>
+        Logout
+    </button>
+</div>
+</div>
+@code {
+    private async Task Logout()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("User", "/logout");
+            Navigation.NavigateTo("/admin-login", true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+}

@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/dashboard"
 @using EmployeePortal.Components.Pages.Employee
 @inject IEmployeeService EmployeeService
 @inject IDepartmentService DepartmentService
@@ -6,6 +6,9 @@
 @inject IDashboardService DashboardService
 @inject SpinnerService spinnerService
 @rendermode InteractiveServer
+@attribute [Authorize]
+<PageTitle>Admin-Dashboard</PageTitle>
+
 <style>
     .page-number {
         margin: 0 6px;
@@ -43,12 +46,13 @@
     }
 
     .edit-btn {
-        background: #eef4ff;
+        /* background: #eef4ff; */
         color: #f59e0b;
     }
 
         .edit-btn:hover {
             background: #dbe7ff;
+            color: #f59e0b;
         }
 </style>
 <div class="top-header">
@@ -144,7 +148,7 @@
         <div class="card shadow-sm border-0">
 
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 text-muted">Recent Employees</h5>
+                <h5 class="mb-0">Recent Employees</h5>
                 <a href="employees" class="text-decoration-none " style="color:#f59e0b">View All</a>
             </div>
 
@@ -264,7 +268,7 @@
         <div class="card shadow-sm border-0 h-100" >
 
             <div class="card-header bg-white">
-                <h5 class="mb-0 text-muted fw-semibold">Recent Activity</h5>
+                <h5 class="mb-0  fw-semibold">Recent Activity</h5>
             </div>
 
             <div class="card-body">

@@ -1,0 +1,207 @@
+﻿@page "/admin-login"
+@using Application.Dto.AuthDto
+@layout EmptyLayout
+@inject NavigationManager Navigation
+@inject IAuthService AuthService
+@inject HttpClient Http;
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Admin-Login</PageTitle>
+<style>
+    .login-page {
+        height: 100vh;
+        background: #f5f5f5;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .top-section {
+        height: 40%;
+        clip-path: ellipse(100% 75% at 50% 0%);
+        padding-top: 100px;
+        position: relative;
+    }
+
+        .top-section::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .top-section > div {
+            position: relative;
+            z-index: 1;
+        }
+
+    .login-card {
+        position: absolute;
+        top: 25%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 400px;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .alert-container {
+    min-height: 50px; 
+}
+
+/* .alert-msg {
+    background: #fff7ed;
+    border-left: 4px solid #f59e0b;
+    color: #92400e;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    animation: fadeIn 0.3s ease-in-out;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+} */
+.alert-danger {
+    --bs-alert-bg: #fef3c7;        
+    --bs-alert-color: #dc2626;    
+    --bs-alert-border-color: #f59e0b; 
+    --bs-alert-padding-y: 5px;
+    border-left: 5px solid #f59e0b;
+}
+
+@@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+<div class="login-page">
+    <div class="top-section text-white">
+        <div class="d-flex align-items-center justify-content-center gap-2">
+            <img src="/default/logo.png"
+                 alt="logo"
+                 style="height:50px; width:50px; object-fit:cover;">
+
+            <h1 class="mb-0" style="color:#f59e0b;">StaffSphere</h1>
+        </div>
+    </div>
+
+    <EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+
+        <DataAnnotationsValidator />
+
+        <div class="login-card shadow">
+            <h3 class="text-center mb-2">Login</h3>
+            <div class="alert-container">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                    <div class="alert alert-danger">
+                        @errorMessage
+                        </div>
+            }
+            </div>
+
+            <div class="mb-3">
+                <label>Username<span class="text-danger">*</span></label>
+                <InputText class="form-control" @bind-Value="loginModel.Username" />
+                <ValidationMessage For="@(() => loginModel.Username)" />
+            </div>
+
+            <div class="mb-3">
+                <label>Password<span class="text-danger">*</span></label>
+                <InputText type="password" class="form-control" @bind-Value="loginModel.Password" />
+                <ValidationMessage For="@(() => loginModel.Password)" />
+            </div>
+
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    <input style="accent-color:#f59e0b" type="checkbox" /> Remember me
+                </div>
+                <a href="#" class="text-decoration-none">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn button w-100" disabled="@isLoading">
+                @(isLoading ? "Logging in..." : "Login")
+            </button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private LoginDto loginModel = new();
+    private bool isLoading = false;
+    private string errorMessage = "";
+
+    // private async Task HandleLogin()
+    // {
+    //     isLoading = true;
+
+    //     var response = await JS.InvokeAsync<System.Text.Json.JsonElement>(
+    //            "User",                
+    //            "/auth/admin-login",loginModel    
+    //        );
+
+
+    //     isLoading = false;
+
+    //     bool isOk = response.GetProperty("ok").GetBoolean();
+
+    //     if (isOk)
+    //     {
+    //         Navigation.NavigateTo("/dashboard", true);
+    //     }
+    //     else
+    //     {
+    //         errorMessage = "Invalid username or password";
+    //     }
+    // }
+    private async Task HandleLogin()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var response = await JS.InvokeAsync<System.Text.Json.JsonElement>("User","/auth/admin-login",loginModel);
+
+            bool isOk = false;
+
+            if (response.TryGetProperty("ok", out var okProperty))
+            {
+                isOk = okProperty.GetBoolean();
+            }
+
+            if (isOk)
+            {
+                Navigation.NavigateTo("/dashboard", true);
+            }
+            else
+            {
+                errorMessage = "Invalid username or password";
+            }
+        }
+        catch (JSException jsEx)
+        {
+            errorMessage = "Login failed (JS error)";
+            Console.WriteLine($"JS Error: {jsEx.Message}");
+        }
+        catch (TaskCanceledException)
+        {
+            errorMessage = "Request timed out. Please try again.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Something went wrong. Please try again.";
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false; 
+        }
+    }
+}

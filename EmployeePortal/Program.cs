@@ -1,10 +1,12 @@
 using Application.Interfaces.IRepo;
 using Application.Interfaces.IService;
 using EmployeePortal.Components;
+using EmployeePortal.Endpoints.Auth;
 using EmployeePortal.Services;
 using Infrastructure.DatabaseContext;
 using Infrastructure.Repository;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,19 +14,25 @@ var builder = WebApplication.CreateBuilder(args);
 //Database Connection
 builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("default")));
-
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/login";
+        options.LoginPath = "/admin-login";
         options.LogoutPath = "/logout";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
     });
-
 builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped(sp =>
+{
+    var navigation = sp.GetRequiredService<NavigationManager>();
+    return new HttpClient
+    {
+        BaseAddress = new Uri(navigation.BaseUri)
+    };
+});
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -36,6 +44,8 @@ builder.Services.AddScoped<IDesignationService,DesignationService>();
 builder.Services.AddScoped<ExportService>();
 builder.Services.AddScoped<SpinnerService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 
 //Add Repositories
 builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();
@@ -61,9 +71,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseAntiforgery();
-
+app.MapAuthEndpoints();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapGet("/", context =>
+{
+    context.Response.Redirect("/admin-login");
+    return Task.CompletedTask;
+});
 
 app.Run();
