@@ -42,7 +42,7 @@
         transform: translateX(-50%);
         width: 400px;
         background: white;
-        padding: 20px;
+        padding: 30px;
         border-radius: 10px;
     }
     .alert-container {
@@ -87,7 +87,9 @@
                  alt="logo"
                  style="height:50px; width:50px; object-fit:cover;">
 
-            <h1 class="mb-0" style="color:#f59e0b;">StaffSphere</h1>
+            <h1 class="mb-0" style="color:#f59e0b;border-bottom: 2px solid #f59e0b;padding-bottom: 3px;">
+                StaffSphere
+                </h1>
         </div>
     </div>
 
@@ -96,13 +98,13 @@
         <DataAnnotationsValidator />
 
         <div class="login-card shadow">
-            <h3 class="text-center mb-2">Login</h3>
+            <h3 class="text-center mb-3">Login</h3>
             <div class="alert-container">
             @if (!string.IsNullOrEmpty(errorMessage))
             {
                     <div class="alert alert-danger">
                         @errorMessage
-                        </div>
+                    </div>
             }
             </div>
 
@@ -111,16 +113,23 @@
                 <InputText class="form-control" @bind-Value="loginModel.Username" />
                 <ValidationMessage For="@(() => loginModel.Username)" />
             </div>
-
+            
             <div class="mb-3">
                 <label>Password<span class="text-danger">*</span></label>
-                <InputText type="password" class="form-control" @bind-Value="loginModel.Password" />
+                
+                <div class="input-group">
+                    <InputText type="@(isEye ? "text" : "password")"class="form-control"@bind-Value="loginModel.Password" />
+
+                    <span class="input-group-text"style="cursor:pointer;"@onclick="ToggleEye">
+                    <i class="@(isEye ? "bi bi-eye" : "bi bi-eye-slash")"></i>
+                    </span>
+                </div>
                 <ValidationMessage For="@(() => loginModel.Password)" />
             </div>
 
             <div class="d-flex justify-content-between mb-3">
                 <div>
-                    <input style="accent-color:#f59e0b" type="checkbox" /> Remember me
+                    @* <input style="accent-color:#f59e0b" type="checkbox" /> Remember me *@
                 </div>
                 <a href="#" class="text-decoration-none">Forgot password?</a>
             </div>
@@ -134,32 +143,12 @@
 
 @code {
     private LoginDto loginModel = new();
-    private bool isLoading = false;
     private string errorMessage = "";
 
-    // private async Task HandleLogin()
-    // {
-    //     isLoading = true;
-
-    //     var response = await JS.InvokeAsync<System.Text.Json.JsonElement>(
-    //            "User",                
-    //            "/auth/admin-login",loginModel    
-    //        );
+    private bool isLoading = false;
+    private bool isEye = false;
 
 
-    //     isLoading = false;
-
-    //     bool isOk = response.GetProperty("ok").GetBoolean();
-
-    //     if (isOk)
-    //     {
-    //         Navigation.NavigateTo("/dashboard", true);
-    //     }
-    //     else
-    //     {
-    //         errorMessage = "Invalid username or password";
-    //     }
-    // }
     private async Task HandleLogin()
     {
         try
@@ -203,5 +192,9 @@
         {
             isLoading = false; 
         }
+    }
+    private void ToggleEye()
+    {
+        isEye = !isEye;
     }
 }

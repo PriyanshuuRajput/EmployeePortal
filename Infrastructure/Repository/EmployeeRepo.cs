@@ -34,9 +34,9 @@ namespace Infrastructure.Repository
                 {
                     query = query.Where(e =>
                         e.FirstName.Contains(search) ||
-                        e.LastName.Contains(search) ||
-                        e.Email.Contains(search) ||
-                        e.EmpCode.Contains(search));
+                        e.LastName.Contains(search));
+                        //e.Email.Contains(search) ||
+                        //e.EmpCode.Contains(search));
                 }
                 //Filters
                 if (selectedDepartment.HasValue)

@@ -154,20 +154,20 @@
                                     <h6 class="fw-bold">Employment</h6>
                                     <p>Join Date: @(Employee.HireDate?.ToString("dd MMM yyyy") ?? "Not set")</p>
                                     <p>
-                                        Length of service: @(Employee.HireDate.HasValue? $"{(DateTime.Now - Employee.HireDate.Value).Days / 365} years"
+                                       Length of service: @(Employee.HireDate.HasValue? $"{(DateTime.Now - Employee.HireDate.Value).Days / 365} years"
                                                                             : "Not set")
                                     </p>
                                 </div>
 
                                 <div class="info-card text-start">
                                     <h6 class="fw-bold">Employee Department</h6>
-                                    <p>@(Employee.Department?.Name ?? "None")
+                                    <p>@(Employee.Department?.Name ?? "Not set")
                                     </p>
                                 </div>
 
                                 <div class="info-card text-start">
                                     <h6 class="fw-bold">Employee Designation</h6>
-                                    <p>@(Employee.Designation?.Name ?? "None")
+                                    <p>@(Employee.Designation?.Name ?? "Not set")
                                     </p>
                                 </div>
                             </div>
