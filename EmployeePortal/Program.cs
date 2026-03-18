@@ -17,7 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/admin-login";
+        options.LoginPath = "/login";
         options.LogoutPath = "/logout";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
         options.Cookie.HttpOnly = true;
@@ -77,7 +77,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 app.MapGet("/", context =>
 {
-    context.Response.Redirect("/admin-login");
+    context.Response.Redirect("/login");
     return Task.CompletedTask;
 });
 

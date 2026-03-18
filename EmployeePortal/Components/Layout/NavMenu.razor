@@ -1,5 +1,6 @@
 ﻿@inject IJSRuntime JS
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 
 <div class="d-flex flex-column h-100">
@@ -27,27 +28,28 @@
                 <span>Dashboard</span>
             </NavLink>
         </div>
+            @if (isAdmin)
+            {
+                <div class="nav-item px-0 mb-2">
+                    <NavLink class="nav-link" href="employees">
+                        <span class="bi bi-employees-nav-menu"></span>
+                        <span>Employees</span>
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-0 mb-2">
-            <NavLink class="nav-link" href="employees">
-                <span class="bi bi-employees-nav-menu"></span>
-                <span>Employees</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-0 mb-2">
-                <NavLink class="nav-link" href="departments-designations">
-                <span class="bi bi-departments-nav-menu"></span>
-                <span>Department & Designation</span>
-            </NavLink>
-        </div>
-
+                <div class="nav-item px-0 mb-2">
+                    <NavLink class="nav-link" href="departments-designations">
+                        <span class="bi bi-departments-nav-menu"></span>
+                        <span>Department & Designation</span>
+                    </NavLink>
+                </div>
+            }
 
         <div class="menu-title px-2 mt-2">MANAGEMENT</div>
         <hr />
         <div class="nav-item px-0 mb-2">
-            <NavLink class="nav-link" href="attendance">
-                <span></span>
+            <NavLink class="nav-link" href="@navUrl">
+                <span>@navtext</span>
             </NavLink>
         </div>
 
@@ -55,9 +57,9 @@
         <div class="menu-title px-2 mt-2">SYSTEM</div>
         <hr />
         <div class="nav-item px-0 mb-2">
-            <NavLink class="nav-link" href="settings">
+            @* <NavLink class="nav-link" href="settings">
                 <span></span>
-            </NavLink>
+            </NavLink> *@
         </div>
 
     </nav>
@@ -71,12 +73,38 @@
 </div>
 </div>
 @code {
+    private string navtext = "";
+    private string navUrl = "";
+    private bool isAdmin = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthStateProvider.GetAuthenticationStateAsync()).User;
+        var role = user.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+        if (role == "Manager")
+        {
+            navtext = "Team Attendance";
+            navUrl = "team-attendance";
+        }
+        else if (role == "Admin")
+        {
+            navtext = "All Attendance";
+            navUrl = "all-attendance";
+        }
+        else
+        {
+            navtext = "My Attendance";
+            navUrl = "my-attendance";
+        }
+        isAdmin = role == "Admin";
+    }
     private async Task Logout()
     {
         try
         {
             await JS.InvokeVoidAsync("User", "/logout");
-            Navigation.NavigateTo("/admin-login", true);
+            Navigation.NavigateTo("/login", true);
         }
         catch (Exception ex)
         {

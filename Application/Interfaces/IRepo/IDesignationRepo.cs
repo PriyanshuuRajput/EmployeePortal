@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Application.Interfaces.IRepo
 {
     public interface IDesignationRepo
     {
-        Task<List<Designation>> GetAllDesignationsAsync();
+        Task<PagedResult<Designation>> GetAllDesignationsAsync(int pageNumber, int pageSize, string search,int? selectedDesignationId, string sortColumn, string sortDirection);
         Task<Designation?> GetDesignationByIdAsync(int id);
         Task AddDesignationAsync(Designation designation);
         Task UpdateDesignationAsync(Designation designation);

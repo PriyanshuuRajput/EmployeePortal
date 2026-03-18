@@ -1,4 +1,5 @@
 ﻿using Application.Dto;
+using Domain.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Application.Interfaces.IService
 {
     public interface IDepartmentService
     {
-        Task<List<DepartmentDto>> GetAllAsync();
+        Task<PagedResult<DepartmentDto>> GetAllAsync(int pageNumber, int pageSize, string search, int? selectedDepartment, string sortColumn, string sortDirection);
         Task DeleteDepartmentAsync(int id);
         Task AddDepartmentAsync(DepartmentDto department);
         Task UpdateDepartmentAsync(DepartmentDto department);

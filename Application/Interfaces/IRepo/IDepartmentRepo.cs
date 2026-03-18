@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.Common;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Application.Interfaces.IRepo
 {
     public interface IDepartmentRepo
     {
-        Task<List<Department>> GetAllDepartmentAsync();
+        Task<PagedResult<Department>> GetAllDepartmentAsync(int pageNumber, int pageSize ,string search, int? selectedDepartment, string sortColumn, string sortDirection);
         Task<Department?> GetDepartmentByIdAsync(int id);
         Task AddDepartmentAsync(Department department);
         Task UpdateDepartmentAsync(Department department);

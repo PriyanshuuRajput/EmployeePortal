@@ -1,4 +1,5 @@
 ﻿using Application.Dto;
+using Domain.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Application.Interfaces.IService
 {
     public interface IDesignationService
     {
-        Task<List<DesignationDto>> GetAllDesignationsAsync();
+        Task<PagedResult<DesignationDto>> GetAllDesignationsAsync(int pageNumber, int pageSize,string search ,int? selectedDesignationId, string sortColumn, string sortDirection);
         Task<DesignationDto?> GetDesignationByIdAsync(int id);
         Task AddDesignationAsync(DesignationDto designationDto);
         Task UpdateDesignationAsync(DesignationDto designationDto);

@@ -17,7 +17,6 @@
 
 .top-actions {
     display: flex;
-    flex-wrap:wrap;
     gap: 12px;
     align-items: center;
 }
@@ -68,6 +67,25 @@
     border-color: #f59e0b !important;
     color: white;
 }
+.responsive-table {
+    width: 100%;
+    table-layout: auto;
+}
+
+    .responsive-table th,
+    .responsive-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+        position: relative;
+    }
+
+    .responsive-table tbody tr {
+        max-height: 40px !important;
+    }
+
+    .responsive-table tbody td {
+        padding: 4px 8px;
+    }
 
 /*    Modal styling from right side*/
 

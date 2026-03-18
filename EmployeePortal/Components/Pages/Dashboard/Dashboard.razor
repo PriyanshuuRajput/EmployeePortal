@@ -5,6 +5,7 @@
 @inject IDesignationService DesignationService
 @inject IDashboardService DashboardService
 @inject SpinnerService spinnerService
+@inject AuthenticationStateProvider AuthStateProvider
 @rendermode InteractiveServer
 @attribute [Authorize]
 <PageTitle>Admin-Dashboard</PageTitle>
@@ -58,7 +59,7 @@
 <div class="top-header">
     <div class="top-title">
             <h3>Dashboard</h3>
-            <span class="text-muted fw-semibold">Welcome back, Admin. Here's what's happening today.</span>
+            <span class="text-muted fw-semibold">@msg</span>
         </div>
 
         <div class="top-actions">
@@ -169,7 +170,14 @@
                     </thead>
 
                     <tbody>
-
+                        @if (employees == null || !employees.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    No employees found
+                                </td>
+                            </tr>
+                        }
                         @if (employees != null)
                         {
                             @foreach (var emp in employees
@@ -236,7 +244,7 @@
                                             <i class="bi bi-chevron-left"></i>
                                         </span>
 
-                                       @for (int i = 1; i <= Math.Min(10, Math.Ceiling((double)totalCount / pageSize)); i++)
+                                        @for (int i = 1; i <= Math.Ceiling((double)totalCount / pageSize); i++)
                                         {
                                             var index = i;
                                             <span class="page-number @(pageNumber == index ? "active-page" : "")"
@@ -306,7 +314,7 @@
 
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Departments Overview</h5>
-        <span class="text-muted fw-semibold me-2">Total Departments: @departments.Count</span>
+        <span class="text-muted fw-semibold me-2">Total Departments: @totalDepartments</span>
     </div>
 
     <div class="card-body" style="max-height:400px; overflow-y:auto;">
@@ -326,7 +334,7 @@
 
                         <div class="progress mt-2" style="height:8px;">
                             <div class="progress-bar bg-warning"
-                                 style="width:@(dept.EmployeeCount * 100 / dashboard.totalEmployee)%">
+                                 style="width:@(dashboard.totalEmployee == 0 ? 0 : dept.EmployeeCount * 100 / dashboard.totalEmployee)%">
                             </div>
                         </div>
 
@@ -355,11 +363,12 @@
     private CancellationTokenSource cts { get; set; } = new();
 
     private int newHire;
-    private int totalDepartments;
     private int? selectedDepartmentId;
     private int? selectedDesignationId;
     private int pageNumber = 1;
     private int pageSize = 5;
+    private int totalDepartments;
+    private int totalDesignations;
     private int totalCount;
     private int start;
     private int end;
@@ -367,6 +376,7 @@
     private string searchText = "";
     private string sortColumn = "";
     private string sortDirection = "asc";
+    private string msg = "";
 
     private bool show;
     private bool HasPrevious => pageNumber > 1;
@@ -378,19 +388,41 @@
         {
             spinnerService.Show();
             await Task.Delay(200);
+            var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = auth.User;
+            var role = user.FindFirst(ClaimTypes.Role)?.Value;
 
+            if (role == "Admin")
+            {
+                msg = "Welcome back, Admin. Here's what's happening today.";
+            }
+            else if (role == "Manager")
+            {
+                msg = "Welcome back, Manager. Here's your team overview.";
+            }
+            else
+            {
+                msg = "Welcome back, User. Here's your dashboard.";
+            }
             dashboard = await DashboardService.GetDashboardAsync();
             departmentOverview = await DashboardService.GetDepartmeOverViewAsync();
-            departments = await DepartmentService.GetAllAsync();
-            designations = await DesignationService.GetAllDesignationsAsync();
+       
+            var resultDes = await DesignationService.GetAllDesignationsAsync(pageNumber, pageSize,searchText,selectedDesignationId,sortColumn,sortDirection);
+            var resultDept = await DepartmentService.GetAllAsync(pageNumber, pageSize, searchText, selectedDepartmentId,sortColumn, sortDirection);
+
+            designations = resultDes.Items;
+            departments = resultDept.Items;
+
+            totalDepartments = resultDept.TotalCount;
+            totalDesignations = resultDes.TotalCount;
 
             await LoadEmployees();
 
-            recentEmployees = employees?
-                .Where(e => e.HireDate != null)
-                .OrderByDescending(e => e.HireDate)
-                .Take(5)
-                .ToList() ?? new List<EmployeeDto>();
+          recentEmployees = employees?
+         .Where(e => e.HireDate != null && e.HireDate >= DateTime.Now.AddMonths(-1))
+         .OrderByDescending(e => e.HireDate)
+         .Take(5)
+         .ToList() ?? new List<EmployeeDto>();
         }
         catch (Exception e)
         {
@@ -412,7 +444,7 @@
             employees = result.Items;
             totalCount = result.TotalCount;
 
-            start = (pageNumber - 1) * pageSize + 1;
+            start = totalCount == 0 ? 0 : (pageNumber - 1) * pageSize + 1;
             end = Math.Min(pageNumber * pageSize, totalCount);
         }
         finally
@@ -473,6 +505,7 @@
 
         return "just now";
     }
+
     private async Task NextPage()
     {
         if (HasNext)
@@ -490,6 +523,7 @@
             await LoadEmployees();
         }
     }
+
     private async Task GoToPage(int page)
     {
         pageNumber = page;

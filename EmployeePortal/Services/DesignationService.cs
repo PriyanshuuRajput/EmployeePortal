@@ -1,6 +1,7 @@
 ﻿using Application.Dto;
 using Application.Interfaces.IRepo;
 using Application.Interfaces.IService;
+using Domain.Common;
 using Domain.Entities;
 
 namespace EmployeePortal.Services
@@ -14,16 +15,29 @@ namespace EmployeePortal.Services
             _designationRepo = designationRepo;
         }
 
-        public async Task<List<DesignationDto>> GetAllDesignationsAsync()
+        public async Task<PagedResult<DesignationDto>> GetAllDesignationsAsync(int pageNumber, int pageSize, string search,int? selectedDesignationId, string sortColumn, string sortDirection)
         {
-            var designations = await _designationRepo.GetAllDesignationsAsync();
-
-            return designations.Select(d => new DesignationDto
+            try
             {
-                Id = d.Id,
-                Name = d.Name,
-                DepartmentId = d.DepartmentId
-            }).ToList();
+                var result = await _designationRepo.GetAllDesignationsAsync(pageNumber, pageSize , search, selectedDesignationId,sortColumn,sortDirection);
+
+                return new PagedResult<DesignationDto>
+                {
+                    Items = result.Items.Select(d => new DesignationDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        DepartmentId = d.DepartmentId,
+                        IsActive = d.IsActive
+                    }).ToList(),
+
+                    TotalCount = result.TotalCount
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error fetching designations: {ex.Message}", ex);
+            }
         }
 
         public async Task<DesignationDto?> GetDesignationByIdAsync(int id)

@@ -1,4 +1,4 @@
-﻿@page "/admin-login"
+﻿@page "/login"
 @using Application.Dto.AuthDto
 @layout EmptyLayout
 @inject NavigationManager Navigation
@@ -131,7 +131,7 @@
                 <div>
                     @* <input style="accent-color:#f59e0b" type="checkbox" /> Remember me *@
                 </div>
-                <a href="#" class="text-decoration-none">Forgot password?</a>
+                @* <a href="#" class="text-decoration-none">Forgot password?</a> *@
             </div>
 
             <button type="submit" class="btn button w-100" disabled="@isLoading">

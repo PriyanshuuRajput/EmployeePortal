@@ -1,6 +1,7 @@
 ﻿using Application.Dto;
 using Application.Interfaces.IRepo;
 using Application.Interfaces.IService;
+using Domain.Common;
 using Domain.Entities;
 using Infrastructure.Repository;
 using System.Transactions;
@@ -16,17 +17,23 @@ namespace EmployeePortal.Services
             _repo = repo;
         }
 
-        public async Task<List<DepartmentDto>> GetAllAsync()
+        public async Task<PagedResult<DepartmentDto>> GetAllAsync(int pageNumber, int pageSize, string search, int? selectedDepartment,  string sortColumn, string sortDirection)
         {
             try
             {
-                var departments = await _repo.GetAllDepartmentAsync();
+                var departments = await _repo.GetAllDepartmentAsync(pageNumber, pageSize,search, selectedDepartment ,sortColumn, sortDirection);
 
-                return departments.Select(d => new DepartmentDto
+                return new PagedResult<DepartmentDto>
                 {
-                    Id = d.Id,
-                    Name = d.Name
-                }).ToList();
+                    Items = departments.Items.Select(d => new DepartmentDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        IsActive = d.IsActive
+                    }).ToList(),
+
+                    TotalCount = departments.TotalCount
+                };
             }
             catch (Exception ex)
             {
